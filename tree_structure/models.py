@@ -62,18 +62,15 @@ class Node(models.Model):
 
         :param inner_order: order of the nodes with one parent, default is 1
         :param attributes: node attrs in json, default is None
-        :param kwargs: you can pass project_id, item_type and item to child node, if not it inherits it
-        from current node, also inherits if it has no value
+        :param kwargs: project_id, item_type and item child node inherits from current(parent) node
         :return: new node
         """
         new_node_path = '0' * (10 - len(str(self.id))) + str(self.id)
         path = self.path + new_node_path
 
-        project_id = self.project_id if not kwargs.get('project_id', self.project_id) \
-            else kwargs.get('project_id', self.project_id)
-        item_type = self.item_type if not kwargs.get('item_type', self.item_type) \
-            else kwargs.get('item_type', self.item_type)
-        item = self.item if not kwargs.get('item', self.item) else kwargs.get('item', self.item)
+        project_id = self.project_id
+        item_type = self.item_type
+        item = self.item
 
         new_node = Node(
             path=path,

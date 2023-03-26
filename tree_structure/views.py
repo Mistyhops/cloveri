@@ -12,7 +12,7 @@ class NodeViewSet(viewsets.ModelViewSet):
 
     @action(methods=['get'], detail=False)
     def get_tree(self, request):
-        tree = Node.get_tree()
+        tree = Node.get_tree(request.query_params.get('item'))
         serializer = NodeSerializer(tree, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -26,7 +26,7 @@ class NodeViewSet(viewsets.ModelViewSet):
         item_type = serializer.validated_data['item_type']
         item = serializer.validated_data['item']
         inner_order = serializer.validated_data.get('inner_order', 1)
-        attributes = serializer.validated_data.get('attributes', None)
+        attributes = serializer.validated_data.get('attributes')
 
         root = Node.add_root(
             project_id=project_id,
@@ -43,22 +43,14 @@ class NodeViewSet(viewsets.ModelViewSet):
         parent = self.get_object()
         data = request.data
 
-        if data.get('project_id', None) or data.get('item_type', None) or data.get('item', None):
-            serializer = NewRootNodeSerializer(data=data)
-        else:
-            serializer = NewChildNodeSerializer(data=data)
-
+        serializer = NewChildNodeSerializer(data=data)
         serializer.is_valid(raise_exception=True)
 
-        project_id = serializer.validated_data.get('project_id', None)
-        item_type = serializer.validated_data.get('item_type', None)
-        item = serializer.validated_data.get('item', None)
+        inner_order = serializer.validated_data.get('inner_order')
         attributes = serializer.validated_data.get('attributes')
 
         child = parent.add_child(
-            project_id=project_id,
-            item_type=item_type,
-            item=item,
+            inner_order=inner_order,
             attributes=attributes
         )
         child_data = self.get_serializer(child).data
