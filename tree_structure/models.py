@@ -32,7 +32,7 @@ class Node(models.Model):
         return cls.objects.all()
 
     @classmethod
-    def add_root(cls, project_id: str, item_type: str, item: str, inner_order: str = 1,
+    def add_root(cls, project_id: str, item_type: str, item: str, inner_order: int = 1,
                  attributes: str = None):
         """
         Adds root node to the tree
@@ -63,14 +63,17 @@ class Node(models.Model):
         :param inner_order: order of the nodes with one parent, default is 1
         :param attributes: node attrs in json, default is None
         :param kwargs: you can pass project_id, item_type and item to child node, if not it inherits it
-        from current node
+        from current node, also inherits if it has no value
         :return: new node
         """
         new_node_path = '0' * (10 - len(str(self.id))) + str(self.id)
         path = self.path + new_node_path
-        project_id = kwargs.get('project_id', self.project_id)
-        item_type = kwargs.get('item_type', self.item_type)
-        item = kwargs.get('item', self.item)
+
+        project_id = self.project_id if not kwargs.get('project_id', self.project_id) \
+            else kwargs.get('project_id', self.project_id)
+        item_type = self.item_type if not kwargs.get('item_type', self.item_type) \
+            else kwargs.get('item_type', self.item_type)
+        item = self.item if not kwargs.get('item', self.item) else kwargs.get('item', self.item)
 
         new_node = Node(
             path=path,
