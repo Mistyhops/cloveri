@@ -52,6 +52,10 @@ class Node(models.Model):
         :param attributes: node attrs in json, default is None
         :return: new node
         """
+
+        item_type = item_type.strip()
+        item = item.strip()
+
         new_node = cls(
             path='',
             project_id=project_id,
@@ -64,10 +68,17 @@ class Node(models.Model):
 
         return new_node
 
-    def add_child(self, inner_order: str = 1, attributes: str = None, **kwargs):
+    def add_child(self, project_id: str, item_type: str, item: str, inner_order: str = 1,
+                  attributes: str = None, **kwargs):
         """
         Adds a child to the node.
 
+        :param project_id: project_id must be UUID. project_id for child note is required, and it must be equal
+        to parent's project_id, if not raise ValueError
+        :param item_type: item_type for child note is required, and it must be equal to parent's item_type,
+        if not raise ValueError
+        :param item: item for child note is required, and it must be equal to parent's item,
+        if not raise ValueError
         :param inner_order: order of the nodes with one parent, default is 1
         :param attributes: node attrs in json, default is None
         :param kwargs: project_id, item_type and item child node inherits from current(parent) node
@@ -76,9 +87,15 @@ class Node(models.Model):
         new_node_path = '0' * (10 - len(str(self.id))) + str(self.id)
         path = self.path + new_node_path
 
-        project_id = self.project_id
-        item_type = self.item_type
-        item = self.item
+        item_type = item_type.strip()
+        item = item.strip()
+
+        if not project_id == self.project_id:
+            raise ValueError('child note\'s project_id must be equal ot parent\'s project_id')
+        if not item_type.lower() == self.item_type.strip().lower():
+            raise ValueError('child note\'s item_type must be equal ot parent\'s item_type')
+        if not item.lower() == self.item.strip().lower():
+            raise ValueError('child note\'s item must be equal ot parent\'s item')
 
         new_node = Node(
             path=path,

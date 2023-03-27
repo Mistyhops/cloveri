@@ -4,7 +4,7 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 
 from tree_structure.models import Node
-from tree_structure.serializers import NodeSerializer, NewRootNodeSerializer, NewChildNodeSerializer
+from tree_structure.serializers import NodeSerializer, NewRootNodeSerializer
 
 
 class NodeViewSet(viewsets.ModelViewSet):
@@ -51,15 +51,26 @@ class NodeViewSet(viewsets.ModelViewSet):
         parent = self.get_object()
         data = request.data
 
-        serializer = NewChildNodeSerializer(data=data)
+        serializer = NewRootNodeSerializer(data=data)
         serializer.is_valid(raise_exception=True)
 
+        project_id = serializer.validated_data['project_id']
+        item_type = serializer.validated_data['item_type']
+        item = serializer.validated_data['item']
         inner_order = serializer.validated_data.get('inner_order', 1)
         attributes = serializer.validated_data.get('attributes')
 
-        child = parent.add_child(
-            inner_order=inner_order,
-            attributes=attributes
-        )
+        try:
+            child = parent.add_child(
+                project_id=project_id,
+                item_type=item_type,
+                item=item,
+                inner_order=inner_order,
+                attributes=attributes
+            )
+        except ValueError as e:
+            return Response({"detail": f"{e}"},
+                            status=status.HTTP_400_BAD_REQUEST)
+
         child_data = self.get_serializer(child).data
         return Response(child_data, status=status.HTTP_201_CREATED)
