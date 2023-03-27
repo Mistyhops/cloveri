@@ -1,5 +1,6 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
+from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 
 from tree_structure.models import Node
@@ -14,6 +15,13 @@ class NodeViewSet(viewsets.ModelViewSet):
     def get_tree(self, request):
         tree = Node.get_tree(request.query_params.get('item'))
         serializer = NodeSerializer(tree, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(methods=['get'], detail=True)
+    def get_descendants(self, request, pk=None):
+        node = get_object_or_404(Node, id=pk)
+        descendants = node.get_descendants()
+        serializer = NodeSerializer(descendants, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(methods=['post'], detail=False)

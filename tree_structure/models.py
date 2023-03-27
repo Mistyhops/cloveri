@@ -31,6 +31,14 @@ class Node(models.Model):
             return cls.objects.filter(item=item)
         return cls.objects.all()
 
+    def get_descendants(self):
+        new_node_path = '0' * (10 - len(str(self.id))) + str(self.id)
+        path = self.path + new_node_path
+        result = Node.objects.filter(
+            path__startswith=path
+        )
+        return result
+
     @classmethod
     def add_root(cls, project_id: str, item_type: str, item: str, inner_order: int = 1,
                  attributes: str = None):
