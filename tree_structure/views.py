@@ -46,7 +46,7 @@ class NodeViewSet(viewsets.ModelViewSet):
         serializer = NewChildNodeSerializer(data=data)
         serializer.is_valid(raise_exception=True)
 
-        inner_order = serializer.validated_data.get('inner_order')
+        inner_order = serializer.validated_data.get('inner_order', 1)
         attributes = serializer.validated_data.get('attributes')
 
         child = parent.add_child(
