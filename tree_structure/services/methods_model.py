@@ -1,12 +1,25 @@
 
 from ..models import Node
-from ..serializers import NewNodeSerializer, NodeSerializer
+from ..serializers import NodeSerializer, NewNodeSerializer
 from rest_framework.generics import get_object_or_404
 
-def get_all_node():
-    """Метод вывода всех записей из модели Node"""
-    result = NodeSerializer(Node.objects.all(), many=True).data
-    return result
+def get_node(pk):
+    """Метод вывода записи из модели Node"""
+    try:
+        result = NodeSerializer(Node.objects.get(pk=pk), many=False).data
+        return result
+    except:
+        return None
+    # result = NodeSerializer(Node.objects.all(), many=True).data
+
+def get_nodes(pk):
+    """Метод вывода записи из модели Node"""
+    try:
+        instance = Node.objects.get(pk=pk)
+        result = NodeSerializer(Node.objects.filter(path__startswith=instance.path), many=True).data
+        return result
+    except:
+        return None
 
 
 def create_node(request):
@@ -19,7 +32,7 @@ def create_node(request):
 
     try:
         parent_id = request.data['parent_id']
-        parent = get_object_or_404(Node, id=parent_id)
+        parent = Node.objects.get(id=parent_id)
         new_node_path = '0' * (10 - len(str(parent.id))) + str(parent.id)
         path = parent.path + new_node_path
 
@@ -29,14 +42,33 @@ def create_node(request):
         path = ""
         inner_order = 1
 
+    try:
+        node_new = Node.objects.create(
+            path=path,
+            project_id=request.data['project_id'],
+            item_type=request.data['item_type'],
+            item=request.data['item'],
+            inner_order=inner_order,
+            attributes=request.data['attributes'],
+        )
+        return NewNodeSerializer(node_new).data
+    except:
+        return None
 
-    node_new = Node.objects.create(
-        path=path,
-        project_id=request.data['project_id'],
-        item_type=request.data['item_type'],
-        item=request.data['item'],
-        inner_order=inner_order,
-        attributes=request.data['attributes'],
-    )
-    return NewNodeSerializer(node_new).data
+
+def update_attributes_node(request, pk):
+    serializer = NewNodeSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+
+    try:
+        instance = Node.objects.get(pk=pk)
+        instance.attributes = request.data['attributes']
+        instance.save()
+        return NewNodeSerializer(instance).data
+    except:
+        return None
+
+
+
+
 
