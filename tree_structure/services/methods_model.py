@@ -1,45 +1,48 @@
-# This is an auto-generated Django model module.
-# You'll have to do the following manually to clean this up:
-#   * Rearrange models' order
-#   * Make sure each model has one field with primary_key=True
-#   * Make sure each ForeignKey and OneToOneField has `on_delete` set to the desired behavior
-#   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
-# Feel free to rename the models, but don't rename db_table values or field names.
-from django.db import models
+
+from ..models import Node
+from ..serializers import NewNodeSerializer, NodeSerializer
+from rest_framework.generics import get_object_or_404
+
+def get_all_node():
+    result = NodeSerializer(Node.objects.all(), many=True).data
+    return result
 
 
-class Node(models.Model):
-    # id = models.BigAutoField(primary_key=True)
-    path = models.TextField(null=True)
-    project_id = models.UUIDField()
-    item_type = models.TextField()
-    item = models.TextField()
-    inner_order = models.BigIntegerField()
-    attributes = models.JSONField(blank=True, null=True)
+def create_node(request):
+    serializer = NewNodeSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
 
-    class Meta:
-        managed = False
-        db_table = 'tree_structure_node'
-        unique_together = (('path', 'id'), ('id', 'project_id', 'item_type', 'item'),)
+    parent_id = request.data['parent_id']
 
-    # def __str__(self):
-    #     return f'{self.item}: {self.id}, {self.path}'
-    #
-    # @classmethod
-    # def get_tree(cls, item=None):
-    #     if item:
-    #         return cls.objects.filter(item=item)
-    #     return cls.objects.all()
-    #
-    # def get_descendants(self):
-    #     new_node_path = '0' * (10 - len(str(self.id))) + str(self.id)
-    #     path = self.path + new_node_path
-    #     result = Node.objects.filter(
-    #         path__startswith=path
-    #     )
-    #     return result
-    #
-    # @classmethod
+    if not parent_id:
+        node_new = Node.objects.create(
+            project_id=request.data['project_id'],
+            item_type=request.data['item_type'],
+            item=request.data['item'],
+            inner_order=request.data['inner_order'],
+            attributes=request.data['attributes'],
+        )
+
+    else:
+        parent = get_object_or_404(Node, id=parent_id)
+        print(parent.path)
+        new_node_path = '0' * (10 - len(str(parent.path))) + str(parent_id)
+        path = parent.path + new_node_path
+        node_new = Node.objects.create(
+            path=path,
+            project_id=request.data['project_id'],
+            item_type=request.data['item_type'],
+            item=request.data['item'],
+            inner_order=request.data['inner_order'],
+            attributes=request.data['attributes'],
+        )
+    return NewNodeSerializer(node_new).data
+
+
+
+
+
+# @classmethod
     # def add_root(cls, project_id: str, item_type: str, item: str, inner_order: int = 1,
     #              attributes: str = None):
     #     """

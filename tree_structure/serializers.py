@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from tree_structure.models import Node
+from .models import Node
 
 
 class NodeSerializer(serializers.ModelSerializer):
@@ -9,13 +9,15 @@ class NodeSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class NewRootNodeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Node
-        fields = ('project_id', 'item_type', 'item', 'attributes', )
+class NewNodeSerializer(serializers.ModelSerializer):
+
+    attributes = serializers.JSONField(read_only=True)
+    id = serializers.JSONField(read_only=True)
+    path = serializers.JSONField(read_only=True)
 
 
-class NewChildNodeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Node
-        fields = ('attributes', )
+        fields = ('id', 'path', 'project_id', 'item_type', 'item', 'inner_order', 'attributes', )
+
+
