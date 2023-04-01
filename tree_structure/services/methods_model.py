@@ -26,9 +26,7 @@ def create_node(request):
         num_child = Node.objects.filter(path=path)
         inner_order = len(num_child) + 1
     except KeyError:
-        obj = Node.objects.latest('id')
-        new_id_path = obj.id + 1
-        path = '0' * (10 - len(str(new_id_path))) + str(new_id_path)
+        path = ""
         inner_order = 1
 
 
