@@ -1,10 +1,7 @@
-from rest_framework import viewsets, status
-from rest_framework.decorators import action
-from rest_framework.generics import get_object_or_404
+from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .services import methods_model
-
 
 
 class GetNodeApiView(APIView):
@@ -45,7 +42,7 @@ class GetNodesApiView(APIView):
             return Response({'error': 'Object does not exists'})
 
 
-class NodeApiView(APIView):
+class CreateNodeApiView(APIView):
     def post(self, request):
         result = methods_model.create_node(request)
         if result:
@@ -54,11 +51,6 @@ class NodeApiView(APIView):
             return Response({'error': 'Object not created'})
 
 
-
-
-    # def delete(self, request):
-    #     result = methods_model.create_node(request)
-    #     return Response({'node': result})
 
 
 

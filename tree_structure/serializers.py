@@ -11,8 +11,6 @@ class NodeSerializer(serializers.ModelSerializer):
 
 class NewNodeSerializer(serializers.ModelSerializer):
 
-    # attributes = serializers.JSONField(read_only=True)
-    # id = serializers.BigAutoField(read_only=True)
     path = serializers.CharField(read_only=True)
     inner_order = serializers.IntegerField(read_only=True)
 
