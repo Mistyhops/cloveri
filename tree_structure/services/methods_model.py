@@ -12,30 +12,32 @@ def create_node(request):
     serializer = NewNodeSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
 
-    parent_id = request.data['parent_id']
+    #здесь остается вопрос, как валидировать project_id, если parent_id не передаем
+    #и создаем корневой узел. Теоритически project_id не должен продублироваться
 
-    if not parent_id:
-        node_new = Node.objects.create(
-            project_id=request.data['project_id'],
-            item_type=request.data['item_type'],
-            item=request.data['item'],
-            inner_order=request.data['inner_order'],
-            attributes=request.data['attributes'],
-        )
-
-    else:
+    try:
+        parent_id = request.data['parent_id']
         parent = get_object_or_404(Node, id=parent_id)
-        print(parent.path)
-        new_node_path = '0' * (10 - len(str(parent.path))) + str(parent_id)
+        new_node_path = '0' * (10 - len(str(parent.id))) + str(parent.id)
         path = parent.path + new_node_path
-        node_new = Node.objects.create(
-            path=path,
-            project_id=request.data['project_id'],
-            item_type=request.data['item_type'],
-            item=request.data['item'],
-            inner_order=request.data['inner_order'],
-            attributes=request.data['attributes'],
-        )
+
+        num_child = Node.objects.filter(path=path)
+        inner_order = len(num_child) + 1
+    except:
+        obj = Node.objects.latest('id')
+        new_id_path = obj.id + 1
+        path = '0' * (10 - len(str(new_id_path))) + str(new_id_path)
+        inner_order = 1
+
+
+    node_new = Node.objects.create(
+        path=path,
+        project_id=request.data['project_id'],
+        item_type=request.data['item_type'],
+        item=request.data['item'],
+        inner_order=inner_order,
+        attributes=request.data['attributes'],
+    )
     return NewNodeSerializer(node_new).data
 
 

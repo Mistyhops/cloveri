@@ -10,7 +10,7 @@ from django.db import models
 
 class Node(models.Model):
     # id = models.BigAutoField(primary_key=True)
-    path = models.TextField(null=True)
+    path = models.TextField()
     project_id = models.UUIDField()
     item_type = models.TextField()
     item = models.TextField()
