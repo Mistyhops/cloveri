@@ -16,7 +16,9 @@ def get_nodes(pk):
     """Метод вывода записи из модели Node"""
     try:
         instance = Node.objects.get(pk=pk)
-        result = NodeSerializer(Node.objects.filter(path__startswith=instance.path), many=True).data
+        path = instance.path
+        path += '0' * (10 - len(str(instance.id))) + str(instance.id)
+        result = NodeSerializer(Node.objects.filter(path__startswith=path), many=True).data
         return result
     except:
         return None
@@ -33,9 +35,8 @@ def create_node(request):
     try:
         parent_id = request.data['parent_id']
         parent = Node.objects.get(id=parent_id)
-        new_node_path = '0' * (10 - len(str(parent.id))) + str(parent.id)
-        path = parent.path + new_node_path
-
+        path = parent.path
+        path += '0' * (10 - len(str(parent.id))) + str(parent.id)
         num_child = Node.objects.filter(path=path)
         inner_order = len(num_child) + 1
     except KeyError:
