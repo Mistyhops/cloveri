@@ -35,7 +35,7 @@ class GetNodesApiView(APIView):
             return Response({'error': 'pk cannot be null'})
 
         try:
-            result = methods_model.get_childrens(pk)
+            result = methods_model.get_children(pk)
             return Response({'nodes': result})
         except Exception as e:
             return Response({'error': f'{e}'})

@@ -9,7 +9,7 @@ def get_node(pk):
     return result
 
 
-def get_childrens(pk):
+def get_children(pk):
     """Метод вывода всех дочерних узлов из модели Node"""
     try:
         instance = Node.objects.get(pk=pk)
