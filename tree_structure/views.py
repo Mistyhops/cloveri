@@ -37,6 +37,8 @@ class GetNodesApiView(APIView):
         try:
             result = methods_model.get_children(pk)
             return Response({'nodes': result})
+        except TypeError as e:
+            return Response({'error': f'{e}'})
         except Exception as e:
             return Response({'error': f'{e}'})
 

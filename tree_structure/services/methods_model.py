@@ -11,14 +11,13 @@ def get_node(pk):
 
 def get_children(pk):
     """Метод вывода всех дочерних узлов из модели Node"""
-    try:
-        instance = Node.objects.get(pk=pk)
-        path = instance.path
-        path += '0' * (10 - len(str(instance.id))) + str(instance.id)
-        result = NodeSerializer(Node.objects.filter(path__startswith=path), many=True).data
-        return result
-    except Exception as e:
-        return e
+
+    instance = Node.objects.get(pk=pk)
+    path = instance.path
+    path += '0' * (10 - len(str(instance.id))) + str(instance.id)
+    result = NodeSerializer(Node.objects.filter(path__startswith=path), many=True).data
+    return result
+
 
 
 def create_node(request):
