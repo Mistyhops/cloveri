@@ -4,7 +4,7 @@ from ..serializers import NodeSerializer, NewNodeSerializer
 from rest_framework.generics import get_object_or_404
 
 def get_node(pk):
-    """Метод вывода записи из модели Node"""
+    """Метод вывода узла из модели Node"""
     try:
         result = NodeSerializer(Node.objects.get(pk=pk), many=False).data
         return result
@@ -13,7 +13,7 @@ def get_node(pk):
     # result = NodeSerializer(Node.objects.all(), many=True).data
 
 def get_nodes(pk):
-    """Метод вывода записи из модели Node"""
+    """Метод вывода всех дочерних узлов из модели Node"""
     try:
         instance = Node.objects.get(pk=pk)
         path = instance.path
