@@ -26,6 +26,8 @@ class GetNodeApiView(APIView):
         try:
             result = methods_model.update_attributes_node(request, pk)
             return Response({'node': result}, status=status.HTTP_201_CREATED)
+        except TypeError as e:
+            return Response({'error': f'{e}'})
         except Exception as e:
             return Response({'error': f'{e}'})
 
