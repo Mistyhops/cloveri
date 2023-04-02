@@ -9,12 +9,11 @@ class GetNodeApiView(APIView):
         pk = kwargs.get("pk", None)
         if not pk:
             return Response({'error': 'pk cannot be null'})
-
-        result = methods_model.get_node(pk)
-        if result:
+        try:
+            result = methods_model.get_node(pk)
             return Response({'node': result})
-        else:
-            return Response({'error': 'Object does not exists'})
+        except Exception as e:
+            return Response({'error': f'{e}'})
 
 
     def put(self, request, **kwargs):
@@ -22,11 +21,11 @@ class GetNodeApiView(APIView):
         if not pk:
             return Response({'error': 'pk cannot be null'})
 
-        result = methods_model.update_attributes_node(request, pk)
-        if result:
+        try:
+            result = methods_model.update_attributes_node(request, pk)
             return Response({'node': result}, status=status.HTTP_201_CREATED)
-        else:
-            return Response({'error': 'Object does not exists'})
+        except Exception as e:
+            return Response({'error': f'{e}'})
 
 
 class GetNodesApiView(APIView):
@@ -35,20 +34,20 @@ class GetNodesApiView(APIView):
         if not pk:
             return Response({'error': 'pk cannot be null'})
 
-        result = methods_model.get_nodes(pk)
-        if result:
+        try:
+            result = methods_model.get_childrens(pk)
             return Response({'nodes': result})
-        else:
-            return Response({'error': 'Object does not exists'})
+        except Exception as e:
+            return Response({'error': f'{e}'})
 
 
 class CreateNodeApiView(APIView):
     def post(self, request):
-        result = methods_model.create_node(request)
-        if result:
+        try:
+            result = methods_model.create_node(request)
             return Response({'node': result}, status=status.HTTP_201_CREATED)
-        else:
-            return Response({'error': 'Object not created'})
+        except Exception as e:
+            return Response({'error': f'{e}'})
 
 
 
