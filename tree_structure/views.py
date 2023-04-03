@@ -8,10 +8,10 @@ class GetNodeApiView(APIView):
     def get(self, request, **kwargs):
         pk = kwargs.get("pk", None)
         if not pk:
-            return Response({'error': 'pk cannot be null'})
+            return Response({'error': 'pk cannot be null'}, status=status.HTTP_404_NOT_FOUND)
         try:
             result = methods_model.get_node(pk)
-            return Response({'node': result})
+            return Response({'node': result}, status=status.HTTP_200_OK)
         except TypeError as e:
             return Response({'error': f'{e}'})
         except Exception as e:
@@ -40,7 +40,7 @@ class GetNodesApiView(APIView):
 
         try:
             result = methods_model.get_children(pk)
-            return Response({'nodes': result})
+            return Response({'nodes': result}, status=status.HTTP_200_OK)
         except TypeError as e:
             return Response({'error': f'{e}'})
         except Exception as e:

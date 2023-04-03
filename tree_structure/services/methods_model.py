@@ -3,6 +3,9 @@ from ..models import Node
 from ..serializers import NodeSerializer, NewNodeSerializer
 from rest_framework.generics import get_object_or_404
 
+
+
+
 def get_node(pk):
     """Метод вывода узла из модели Node"""
     result = NodeSerializer(Node.objects.get(pk=pk), many=False).data
