@@ -1,4 +1,5 @@
 from rest_framework.exceptions import ValidationError
+from rest_framework.generics import get_object_or_404
 
 from ..models import Node
 from ..serializers import NodeSerializer, NewNodeSerializer
@@ -13,15 +14,16 @@ def get_tree():
 
 def get_node(pk):
     """Метод вывода узла из модели Node"""
-    # get_objects_or_404
-    serializer = NodeSerializer(Node.objects.get(pk=pk), many=False).data
+    # get_object_or_404?
+    instance = get_object_or_404(Node, pk=pk)
+    serializer = NodeSerializer(instance, many=False).data
     serializer.is_valid(raise_exception=True)
     return serializer
 
 
 def get_children(pk):
     """Метод вывода всех дочерних узлов из модели Node"""
-    instance = Node.objects.get(pk=pk)
+    instance = get_object_or_404(Node, pk=pk)
     path = instance.path
     path += '0' * (10 - len(str(instance.id))) + str(instance.id)
     result = NodeSerializer(Node.objects.filter(path__startswith=path), many=True).data
@@ -85,7 +87,7 @@ def update_attributes_node(request, pk):
     serializer = NewNodeSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
 
-    instance = Node.objects.get(pk=pk)
+    instance = get_object_or_404(Node, pk=pk)
     instance.attributes = request.data['attributes']
     instance.save()
     return NewNodeSerializer(instance).data
