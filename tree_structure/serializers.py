@@ -16,6 +16,6 @@ class NewNodeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Node
-        fields = ('id', 'path', 'project_id', 'item_type', 'item', 'inner_order', 'attributes', )
+        fields = ('id', 'path', 'project_id', 'item_type', 'item', 'inner_order', 'attributes',)
 
 

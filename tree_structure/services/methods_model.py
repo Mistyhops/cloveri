@@ -1,20 +1,26 @@
+from rest_framework.exceptions import ValidationError
 
 from ..models import Node
 from ..serializers import NodeSerializer, NewNodeSerializer
-from rest_framework.generics import get_object_or_404
 
+from .validate_fields_model import Validate
 
+def get_tree():
+    """Метод вывода всех узлов из модели Node"""
+    result = NodeSerializer(Node.objects.all(), many=True).data
+    return result
 
 
 def get_node(pk):
     """Метод вывода узла из модели Node"""
-    result = NodeSerializer(Node.objects.get(pk=pk), many=False).data
-    return result
+    # get_objects_or_404
+    serializer = NodeSerializer(Node.objects.get(pk=pk), many=False).data
+    serializer.is_valid(raise_exception=True)
+    return serializer
 
 
 def get_children(pk):
     """Метод вывода всех дочерних узлов из модели Node"""
-
     instance = Node.objects.get(pk=pk)
     path = instance.path
     path += '0' * (10 - len(str(instance.id))) + str(instance.id)
@@ -22,9 +28,18 @@ def get_children(pk):
     return result
 
 
-
 def create_node(request):
     """Метод создания нового узла в модели Node"""
+    fields_val = [
+        'project_id',
+        'item_type',
+        'item',
+        'attributes',
+    ]
+    validate = Validate(request.data, *fields_val)
+    validate.validate_fields_required()
+
+
     serializer = NewNodeSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
 
@@ -33,7 +48,7 @@ def create_node(request):
 
     try:
         parent_id = request.data['parent_id']
-        parent = Node.objects.get(id=parent_id)
+        parent = validate.validate_parent_id_value(parent_id)
         path = parent.path
         path += '0' * (10 - len(str(parent.id))) + str(parent.id)
         num_child = Node.objects.filter(path=path)
@@ -56,6 +71,17 @@ def create_node(request):
 
 
 def update_attributes_node(request, pk):
+    """Медод измедения поля attributes"""
+
+    fields_val = [
+        'project_id',
+        'item_type',
+        'item',
+        'attributes',
+    ]
+    validate = Validate(request.data, *fields_val)
+    validate.validate_fields_required()
+
     serializer = NewNodeSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
 

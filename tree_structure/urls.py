@@ -7,8 +7,11 @@ from .views import GetNodeApiView, GetNodesApiView, CreateNodeApiView
 
 
 urlpatterns = [
-    path('v1/node/<int:pk>/', GetNodeApiView.as_view()),
+    path('v1/nodes/', GetNodesApiView.as_view()),
     path('v1/nodes/<int:pk>/', GetNodesApiView.as_view()),
+
+    path('v1/node/<int:pk>/', GetNodeApiView.as_view()),
+
     path('v1/node/', CreateNodeApiView.as_view()),
 
     path('docs/', TemplateView.as_view(
