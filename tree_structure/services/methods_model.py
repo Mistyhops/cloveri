@@ -17,7 +17,7 @@ from .validate_fields_model import Validate
 
 
 def get_tree(data: dict):
-    """Метод вывода всех узлов из модели Node"""
+    """Метод вывода всех корневых узлов из модели Node"""
 
     validate = Validate(data)
     validate.validate_fields_required()
@@ -25,21 +25,30 @@ def get_tree(data: dict):
     instance = Node.objects.filter(
         project_id=data['project_id'],
         item_type=data['item_type'],
-        item=data['item'])
+        item=data['item'],
+        path="")
 
     result = NodeSerializer(instance, many=True).data
     return result
 
 
-def get_node(pk):
+def get_node(data: dict, pk: int):
     """Метод вывода узла из модели Node"""
-    instance = get_object_or_404(Node, pk=pk)
+
+    validate = Validate(data)
+    validate.validate_fields_required()
+
+    instance = get_object_or_404(Node,
+                                 pk=pk,
+                                 project_id=data['project_id'],
+                                 item_type=data['item_type'],
+                                 item=data['item']
+                                 )
     serializer = NodeSerializer(instance, many=False).data
-    serializer.is_valid(raise_exception=True)
     return serializer
 
 
-def get_children(data, pk):
+def get_children(data: dict, pk: int):
     """Метод вывода всех дочерних узлов из модели Node"""
     instance = get_object_or_404(Node, pk=pk)
     path = instance.path

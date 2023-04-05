@@ -14,7 +14,7 @@ class GetNodeApiView(APIView):
         if not pk:
             return Response({'error': 'pk cannot be null'}, status=status.HTTP_404_NOT_FOUND)
 
-        result = methods_model.get_node(pk)
+        result = methods_model.get_node(request.data, pk)
         return Response({'node': result}, status=status.HTTP_200_OK)
 
 
