@@ -21,12 +21,14 @@ class GetNodeApiView(APIView):
     # v1/node/<int:pk>/
     def put(self, request, **kwargs):
         """Изменить поле attributes по id(pk)"""
-        pk = kwargs.get("pk", None)
-        if not pk:
-            return Response({'error': 'pk cannot be null'})
 
-        result = methods_model.update_value_fields(request.data, pk)
-        return Response({'node': result}, status=status.HTTP_201_CREATED)
+        # pk = kwargs.get("pk", None)
+        # if not pk:
+        #     return Response({'error': 'pk cannot be null'})
+        #
+        # result = methods_model.update_value_fields(request.data, pk)
+        # return Response({'node': result}, status=status.HTTP_201_CREATED)
+        return Response({'node': 'method is still in development'}, status=status.HTTP_404_NOT_FOUND)
 
 
 
