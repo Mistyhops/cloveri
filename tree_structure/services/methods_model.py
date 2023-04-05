@@ -7,16 +7,7 @@ from ..serializers import NodeSerializer, NewNodeSerializer
 from .validate_fields_model import Validate
 
 
-# def fields(*fields_val):
-#     def decorator_validate_fields(func):
-#         def wrap(data):
-#             validate = Validate(data, fields_val)
-#             validate.validate_fields_required()
-#         return wrap
-#     return decorator_validate_fields
-
-
-def get_tree(data: dict):
+def get_tree(data: dict) -> dict:
     """Метод вывода всех корневых узлов из модели Node"""
 
     validate = Validate(data)
@@ -26,34 +17,36 @@ def get_tree(data: dict):
         project_id=data['project_id'],
         item_type=data['item_type'],
         item=data['item'],
-        path="")
+        path=""
+    )
 
     result = NodeSerializer(instance, many=True).data
     return result
 
 
-def get_node(data: dict, pk: int):
+def get_node(data: dict, pk: int) -> dict:
     """Метод вывода узла из модели Node"""
 
     validate = Validate(data)
     validate.validate_fields_required()
 
-    instance = get_object_or_404(Node,
-                                 pk=pk,
-                                 project_id=data['project_id'],
-                                 item_type=data['item_type'],
-                                 item=data['item']
-                                 )
+    instance = get_object_or_404(
+        Node,
+        pk=pk,
+        project_id=data['project_id'],
+        item_type=data['item_type'],
+        item=data['item']
+    )
+
     serializer = NodeSerializer(instance, many=False).data
     return serializer
 
 
-def get_children(data: dict, pk: int):
+def get_children(data: dict, pk: int) -> dict:
     """Метод вывода всех дочерних узлов из модели Node"""
     instance = get_object_or_404(Node, pk=pk)
     path = instance.path
     path += '0' * (10 - len(str(instance.id))) + str(instance.id)
-
 
     validate = Validate(data)
     validate.validate_fields_required()
@@ -67,9 +60,7 @@ def get_children(data: dict, pk: int):
     return result
 
 
-# fields_val=['project_id', 'item_type', 'item']
-# @fields(fields_val)
-def create_node(data):
+def create_node(data: dict):
     """Метод создания нового узла в модели Node"""
 
     validate = Validate(data)
@@ -102,26 +93,26 @@ def create_node(data):
 
 
 
-def update_attributes_node(data, pk):
-    """Медод измедения поля attributes"""
-
-    fields = ['attributes',]
-    validate = Validate(data, *fields)
-    validate.validate_fields_required()
-
+def update_value_fields(data: dict, pk: int):
+    """Метод измедения аргументов поля 'attributes'"""
     serializer = NewNodeSerializer(data=data)
     serializer.is_valid(raise_exception=True)
 
-    instance = get_object_or_404(Node,
-                                 pk=pk,
-                                 project_id=data['project_id'],
-                                 item_type=data['item_type'],
-                                 item=data['item']
-                                 )
+    validate = Validate(data, pk)
+    validate.validate_fields_required()
+    instances = validate.validation_updating_fields()
 
-    instance.attributes = data['attributes']
-    instance.save()
-    return NewNodeSerializer(instance).data
+    if data.get('inner_order'):
+        instances[0].inner_order, instances[1].inner_order = instances[1].inner_order, instances[0].inner_order
+        instances[0].save()
+        instances[1].save()
+
+    if data.get('attributes'):
+        instances[0].attributes = data.get('attributes')
+        instances[0].save()
+
+    return NewNodeSerializer(instances[0]).data
+
 
 
 

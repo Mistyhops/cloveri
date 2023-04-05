@@ -8,7 +8,7 @@ class GetNodeApiView(APIView):
 
     #v1/node/<int:pk>/
     def get(self, request, **kwargs):
-        """Получить узел по id"""
+        """Получить узел по id(pk)"""
 
         pk = kwargs.get("pk", None)
         if not pk:
@@ -20,21 +20,24 @@ class GetNodeApiView(APIView):
 
     # v1/node/<int:pk>/
     def put(self, request, **kwargs):
-        """Изменить поле attributes по id"""
+        """Изменить поле attributes по id(pk)"""
         pk = kwargs.get("pk", None)
         if not pk:
             return Response({'error': 'pk cannot be null'})
 
-        result = methods_model.update_attributes_node(request.data, pk)
+        result = methods_model.update_value_fields(request.data, pk)
         return Response({'node': result}, status=status.HTTP_201_CREATED)
 
+
+
+
     def delete(self):
+        """Скрыть узел. Установить поле hidden=True"""
         pass
 
 
 
 class GetNodesApiView(APIView):
-
     #v1/nodes/
     def get(self, request, **kwargs):
         """Получить потомков узла, если передан id, иначе получить все корневые узлы"""
@@ -50,6 +53,8 @@ class GetNodesApiView(APIView):
 
 class CreateNodeApiView(APIView):
     def post(self, request):
+        """Создать новый узел"""
+
         result = methods_model.create_node(request.data)
         return Response({'node': result}, status=status.HTTP_201_CREATED)
 

@@ -12,10 +12,11 @@ class Validate:
         'item_type',
         'item',
     ]
-    def __init__(self, request_data: dict, *args: list|None):
+    def __init__(self, request_data: dict, pk: int = None, *args: list|None):
         self.request_data = request_data
         self.fields_pk = __class__.fields_pk
         self.fields_pk += args
+        self.pk = pk
 
 
     def validate_fields_required(self):
@@ -30,7 +31,7 @@ class Validate:
             raise ValidationError(errors)
 
 
-    def validate_children_fields_value(self, parent_id: int):
+    def validate_children_fields_value(self, parent_id: int) -> object:
         """Метод сверяет переданные значения project_id, item_type, item со значениями этих полей у родителя"""
 
         #если в request_data передан parent_id, значит попытка создать дочерний узел
@@ -51,3 +52,35 @@ class Validate:
                 raise ValidationError(errors)
 
             return instance
+
+    def validation_updating_fields(self) -> tuple:
+        """Метод проверяет """
+        errors = []
+
+
+        instance_one = Node.objects.filter(
+            pk=self.pk,
+            project_id=self.request_data['project_id'],
+            item_type=self.request_data['item_type'],
+            item=self.request_data['item'],
+        ).first()
+        if not instance_one:
+            errors.append(f"Object not found")
+
+        if self.request_data.get('inner_order'):
+            instance_two = Node.objects.filter(
+                project_id=self.request_data['project_id'],
+                item_type=self.request_data['item_type'],
+                item=self.request_data['item'],
+                inner_order=self.request_data.get('inner_order')
+            ).first()
+            if not instance_two:
+                errors.append(f"inner_order outside")
+
+        if errors:
+            raise ValidationError(errors)
+
+        return instance_one, instance_two
+
+
+
