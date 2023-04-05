@@ -4,6 +4,7 @@ from .models import Node
 
 
 class NodeSerializer(serializers.ModelSerializer):
+    # hidden = serializers.HiddenField()
     class Meta:
         model = Node
         fields = '__all__'

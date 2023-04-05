@@ -1,3 +1,5 @@
+from typing import Optional
+
 from rest_framework.exceptions import ValidationError
 
 from ..models import Node
@@ -5,21 +7,31 @@ from ..models import Node
 
 class Validate:
     """Класс для валидации переданных полей при работе с моделью Node"""
-    def __init__(self, request_data, *args):
+    fields_pk = [
+        'project_id',
+        'item_type',
+        'item',
+    ]
+    def __init__(self, request_data: dict, *args: list|None):
         self.request_data = request_data
-        self.fields = args
+        self.fields_pk = __class__.fields_pk
+        self.fields_pk += args
+
 
     def validate_fields_required(self):
-        """Метод проверяет, что переданный в self.fields список полей имеется в self.request_data"""
+        """Метод проверяет, что в request.data переданы агрументы project_id, item_type, item,
+        а также другие необходимые поля"""
+
         errors = []
-        for field in self.fields:
+        for field in self.fields_pk:
             if field not in self.request_data:
                 errors.append(f'{field} field is required.')
         if errors:
             raise ValidationError(errors)
 
-    def validate_parent_id_value(self, parent_id):
-        """Метод сверяет переданные значение полей с родительскими"""
+
+    def validate_children_fields_value(self, parent_id: int):
+        """Метод сверяет переданные значения project_id, item_type, item со значениями этих полей у родителя"""
 
         #если в request_data передан parent_id, значит попытка создать дочерний узел
         if 'parent_id' in self.request_data:
