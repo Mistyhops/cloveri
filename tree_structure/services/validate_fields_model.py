@@ -14,7 +14,7 @@ class Validate:
     ]
     def __init__(self, request_data: dict, pk: int = None, *args: list|None):
         self.request_data = request_data
-        self.fields_pk = __class__.fields_pk
+        self.fields_pk = Validate.fields_pk
         self.fields_pk += args
         self.pk = pk
 
