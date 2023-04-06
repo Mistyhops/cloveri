@@ -94,7 +94,7 @@ def create_node(data: dict):
 
 
 def update_value_fields(data: dict, pk: int):
-    """Метод измедения аргументов поля 'attributes'"""
+    """Метод измедения значений полей 'attributes' и 'inner_order'"""
     serializer = NewNodeSerializer(data=data)
     serializer.is_valid(raise_exception=True)
 
