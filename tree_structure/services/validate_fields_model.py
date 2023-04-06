@@ -17,7 +17,7 @@ class Validate:
         self.fields_pk = Validate.fields_pk
         self.fields_pk += args
         self.pk = pk
-
+        self.dd = None
 
     def validate_fields_required(self):
         """Метод проверяет, что в request.data переданы агрументы project_id, item_type, item,
