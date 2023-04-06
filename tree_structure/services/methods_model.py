@@ -113,7 +113,5 @@ def update_value_fields(data: dict, pk: int):
     return NewNodeSerializer(instances[0]).data
 
 
-
-
-
-
+def test_func():
+    pass
