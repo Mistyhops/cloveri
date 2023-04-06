@@ -12,13 +12,12 @@ class Validate:
         'item_type',
         'item',
     ]
-    def __init__(self, request_data: dict, pk: int = None, *args: list|None):
+    def __init__(self, request_data: dict, pk: int = None, *args: Optional[list]):
         self.request_data = request_data
         self.fields_pk = Validate.fields_pk
         self.fields_pk += args
         self.pk = pk
-        self.dd = None
-        self.ff = None
+
 
     def validate_fields_required(self):
         """Метод проверяет, что в request.data переданы агрументы project_id, item_type, item,
