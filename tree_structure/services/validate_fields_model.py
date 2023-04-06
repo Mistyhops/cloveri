@@ -7,28 +7,39 @@ from ..models import Node
 
 class Validate:
     """Класс для валидации переданных полей при работе с моделью Node"""
-    fields_pk = [
+    fields_pk = (
         'project_id',
         'item_type',
         'item',
-    ]
+    )
 
-    def __init__(self, request_data: dict, pk: int = None, *args: Optional[list]):
+    def __init__(self, request_data: dict, *args: Optional[list], **kwargs: Optional[dict]):
         self.request_data = request_data
         self.fields_pk = Validate.fields_pk
-        self.fields_pk += args
-        self.pk = pk
+        self.fields_allowed = self.fields_pk
+        self.fields_allowed += args
+        self.pk = kwargs.get('pk')
 
     def validate_fields_required(self):
         """Метод проверяет, что в request.data переданы агрументы project_id, item_type, item,
         а также другие необходимые поля"""
 
         errors = []
+
+        # Проверяем, переданы ли обязательные аргументы
         for field in self.fields_pk:
             if field not in self.request_data:
                 errors.append(f'{field} field is required.')
+
+        #Проверяем, нет ли лишних аргументов
+
+        for attr in self.request_data:
+            if attr not in self.fields_allowed:
+                errors.append(f'{attr} not allowed')
+
         if errors:
             raise ValidationError(errors)
+
 
     def validate_children_fields_value(self, parent_id: int) -> object:
         """Метод сверяет переданные значения project_id, item_type, item со значениями этих полей у родителя"""
@@ -52,30 +63,33 @@ class Validate:
 
             return instance
 
-    def validation_updating_fields(self) -> tuple:
-        """Метод проверяет """
-        errors = []
+    def validation_change_fields(self) -> list:
+        """Метод проверяет парамерты для смены inner_order"""
 
-        instance_one = Node.objects.filter(
+        instance_two = None
+
+        instance_change = Node.objects.filter(
             pk=self.pk,
             project_id=self.request_data['project_id'],
             item_type=self.request_data['item_type'],
             item=self.request_data['item'],
         ).first()
-        if not instance_one:
-            errors.append(f"Object not found")
+
+        if not instance_change:
+            raise ValidationError(f"Object not found")
 
         if self.request_data.get('inner_order'):
+            path = instance_change.path
+
             instance_two = Node.objects.filter(
+                path__startswith=path,
                 project_id=self.request_data['project_id'],
                 item_type=self.request_data['item_type'],
                 item=self.request_data['item'],
                 inner_order=self.request_data.get('inner_order')
             ).first()
+
             if not instance_two:
-                errors.append(f"inner_order outside")
+                raise ValidationError(f"inner_order outside")
 
-        if errors:
-            raise ValidationError(errors)
-
-        return instance_one, instance_two
+        return instance_change, instance_two
