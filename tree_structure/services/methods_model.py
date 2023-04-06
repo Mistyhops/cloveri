@@ -16,7 +16,7 @@ def get_tree(data: dict) -> dict:
     instance = Node.objects.filter(
         project_id=data['project_id'],
         item_type=data['item_type'],
-        item=data['item'],
+        item=data['item']
     )
 
     result = NodeSerializer(instance, many=True).data
@@ -115,8 +115,11 @@ def update_value_fields(data: dict, pk: int):
     return NewNodeSerializer(instances[0]).data
 
 
-def test1():
+def test_func():
     pass
 
+
+def test1():
+    pass
 
 
