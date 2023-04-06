@@ -16,8 +16,7 @@ def get_tree(data: dict) -> dict:
     instance = Node.objects.filter(
         project_id=data['project_id'],
         item_type=data['item_type'],
-        item=data['item'],
-        path=""
+        item=data['item']
     )
 
     result = NodeSerializer(instance, many=True).data
