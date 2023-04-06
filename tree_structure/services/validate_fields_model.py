@@ -12,12 +12,13 @@ class Validate:
         'item_type',
         'item',
     ]
-
-    def __init__(self, request_data: dict, pk: int = None, *args: Optional[list]):
+    def __init__(self, request_data: dict, pk: int = None, *args: list|None):
         self.request_data = request_data
         self.fields_pk = Validate.fields_pk
         self.fields_pk += args
         self.pk = pk
+        self.dd = None
+        self.ff = None
 
     def validate_fields_required(self):
         """Метод проверяет, что в request.data переданы агрументы project_id, item_type, item,
@@ -30,10 +31,11 @@ class Validate:
         if errors:
             raise ValidationError(errors)
 
+
     def validate_children_fields_value(self, parent_id: int) -> object:
         """Метод сверяет переданные значения project_id, item_type, item со значениями этих полей у родителя"""
 
-        # если в request_data передан parent_id, значит попытка создать дочерний узел
+        #если в request_data передан parent_id, значит попытка создать дочерний узел
         if 'parent_id' in self.request_data:
             try:
                 instance = Node.objects.get(pk=parent_id)
@@ -55,6 +57,7 @@ class Validate:
     def validation_updating_fields(self) -> tuple:
         """Метод проверяет """
         errors = []
+
 
         instance_one = Node.objects.filter(
             pk=self.pk,
@@ -79,3 +82,6 @@ class Validate:
             raise ValidationError(errors)
 
         return instance_one, instance_two
+
+
+
