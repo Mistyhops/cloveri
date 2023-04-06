@@ -79,7 +79,6 @@ def create_node(data: dict):
         path = ""
         inner_order = 1
 
-
     node_new = Node.objects.create(
         path=path,
         project_id=data['project_id'],
@@ -89,7 +88,6 @@ def create_node(data: dict):
         attributes=data.get('attributes'),
     )
     return NewNodeSerializer(node_new).data
-
 
 
 def update_value_fields(data: dict, pk: int):
@@ -111,7 +109,3 @@ def update_value_fields(data: dict, pk: int):
         instances[0].save()
 
     return NewNodeSerializer(instances[0]).data
-
-
-def test_func():
-    pass
