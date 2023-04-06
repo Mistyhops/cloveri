@@ -37,20 +37,18 @@ def get_node(data: dict, pk: int) -> dict:
         item=data['item']
     )
 
-
-
     serializer = NodeSerializer(instance, many=False).data
     return serializer
 
 
 def get_children(data: dict, pk: int) -> dict:
     """Метод вывода всех дочерних узлов из модели Node"""
+    validate = Validate(data)
+    validate.validate_fields_required()
+
     instance = get_object_or_404(Node, pk=pk)
     path = instance.path
     path += '0' * (10 - len(str(instance.id))) + str(instance.id)
-
-    validate = Validate(data)
-    validate.validate_fields_required()
 
     queryset = Node.objects.filter(
         path__startswith=path,
@@ -64,7 +62,9 @@ def get_children(data: dict, pk: int) -> dict:
 def create_node(data: dict):
     """Метод создания нового узла в модели Node"""
 
-    validate = Validate(data)
+    fields_allowed = ['parent_id',]
+
+    validate = Validate(data, *fields_allowed)
     validate.validate_fields_required()
 
     serializer = NewNodeSerializer(data=data)
@@ -93,15 +93,19 @@ def create_node(data: dict):
     return NewNodeSerializer(node_new).data
 
 
-
-def update_value_fields(data: dict, pk: int):
-    """Метод измедения значений полей 'attributes' и 'inner_order'"""
+def change_value_fields(data: dict, pk: int):
+    """Метод измедения значений полей 'attributes' и 'inner_order'
+    """
     serializer = NewNodeSerializer(data=data)
     serializer.is_valid(raise_exception=True)
 
-    validate = Validate(data, pk)
+    fields_allowed = ['inner_order', 'attributes']
+    kwargs = {'pk': pk}
+
+    validate = Validate(data, *fields_allowed, **kwargs)
     validate.validate_fields_required()
-    instances = validate.validation_updating_fields()
+
+    instances = validate.validation_change_fields()
 
     if data.get('inner_order'):
         instances[0].inner_order, instances[1].inner_order = instances[1].inner_order, instances[0].inner_order
@@ -112,14 +116,8 @@ def update_value_fields(data: dict, pk: int):
         instances[0].attributes = data.get('attributes')
         instances[0].save()
 
+
     return NewNodeSerializer(instances[0]).data
 
-
-def test_func():
-    pass
-
-
-def test1():
-    pass
 
 
