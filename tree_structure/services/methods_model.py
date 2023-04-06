@@ -37,6 +37,8 @@ def get_node(data: dict, pk: int) -> dict:
         item=data['item']
     )
 
+
+
     serializer = NodeSerializer(instance, many=False).data
     return serializer
 
@@ -113,7 +115,8 @@ def update_value_fields(data: dict, pk: int):
     return NewNodeSerializer(instances[0]).data
 
 
-
+def test1():
+    pass
 
 
 
