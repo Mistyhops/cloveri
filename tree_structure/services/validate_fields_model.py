@@ -31,7 +31,7 @@ class Validate:
             if field not in self.request_data:
                 errors.append(f'{field} field is required.')
 
-        #Проверяем, нет ли лишних аргументов
+        # Проверяем, нет ли лишних аргументов
 
         for attr in self.request_data:
             if attr not in self.fields_allowed:
@@ -39,7 +39,6 @@ class Validate:
 
         if errors:
             raise ValidationError(errors)
-
 
     def validate_children_fields_value(self, parent_id: int) -> object:
         """Метод сверяет переданные значения project_id, item_type, item со значениями этих полей у родителя"""

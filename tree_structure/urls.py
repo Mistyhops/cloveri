@@ -4,8 +4,6 @@ from rest_framework.schemas import get_schema_view
 
 from .views import GetNodeApiView, GetNodesApiView, CreateNodeApiView
 
-
-
 urlpatterns = [
     path('v1/nodes/', GetNodesApiView.as_view()),
     path('v1/nodes/<int:pk>/', GetNodesApiView.as_view()),

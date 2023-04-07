@@ -1,4 +1,3 @@
-from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
 
 from ..models import Node
@@ -62,7 +61,7 @@ def get_children(data: dict, pk: int) -> dict:
 def create_node(data: dict):
     """Метод создания нового узла в модели Node"""
 
-    fields_allowed = ['parent_id',]
+    fields_allowed = ['parent_id', ]
 
     validate = Validate(data, *fields_allowed)
     validate.validate_fields_required()
