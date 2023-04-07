@@ -1,6 +1,7 @@
 from typing import Optional
 
 from rest_framework.exceptions import ValidationError
+from django.core.exceptions import ObjectDoesNotExist
 
 from ..models import Node
 
@@ -16,7 +17,7 @@ class Validate:
     def __init__(self, request_data: dict, *args: Optional[list], **kwargs: Optional[dict]):
         self.request_data = request_data
         self.fields_pk = Validate.fields_pk
-        self.fields_allowed = self.fields_pk
+        self.fields_allowed = Validate.fields_pk
         self.fields_allowed += args
         self.pk = kwargs.get('pk')
 
@@ -31,8 +32,7 @@ class Validate:
             if field not in self.request_data:
                 errors.append(f'{field} field is required.')
 
-        # Проверяем, нет ли лишних аргументов
-
+        # Проверяем, не переданы ли лишние аргументы
         for attr in self.request_data:
             if attr not in self.fields_allowed:
                 errors.append(f'{attr} not allowed')
@@ -46,9 +46,11 @@ class Validate:
         # если в request_data передан parent_id, значит попытка создать дочерний узел
         if 'parent_id' in self.request_data:
             try:
-                instance = Node.objects.get(pk=parent_id)
+                instance = Node.objects.filter(pk=parent_id).exclude(hidden=True).first()
+            except ObjectDoesNotExist:
+                raise ValidationError(f'Parent with id {parent_id} does not exist.')
             except Exception as e:
-                raise ValidationError(e)
+                raise ValidationError(f'{e}')
 
             errors = []
             if str(instance.project_id) != str(self.request_data['project_id']):
@@ -63,16 +65,20 @@ class Validate:
             return instance
 
     def validation_change_fields(self) -> list:
-        """Метод проверяет парамерты для смены inner_order"""
+        """Метод проверяет парамерты для смены inner_order или изменение поля attributes.
+        Учитываем, что запрос на изменение может быть для двух полей одновременно
+        или для какого-то одного поля.
+        """
 
         instance_two = None
 
+        # Получаем узел, поля которого будем менять (inner_order, attributes)
         instance_change = Node.objects.filter(
             pk=self.pk,
             project_id=self.request_data['project_id'],
             item_type=self.request_data['item_type'],
             item=self.request_data['item'],
-        ).first()
+        ).exclude(hidden=True).first()
 
         if not instance_change:
             raise ValidationError(f"Object not found")
@@ -86,7 +92,7 @@ class Validate:
                 item_type=self.request_data['item_type'],
                 item=self.request_data['item'],
                 inner_order=self.request_data.get('inner_order')
-            ).first()
+            ).exclude(hidden=True).first()
 
             if not instance_two:
                 raise ValidationError(f"inner_order outside")

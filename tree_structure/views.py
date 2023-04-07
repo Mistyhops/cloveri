@@ -3,7 +3,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .services import methods_model
-
+from .models import Node
 
 class GetNodeApiView(APIView):
 
@@ -35,7 +35,6 @@ class GetNodeApiView(APIView):
 
 
 class GetNodesApiView(APIView):
-
     # v1/nodes/
     def get(self, request, **kwargs):
         """Получить потомков узла, если передан id, иначе получить все корневые узлы"""
@@ -67,3 +66,11 @@ class CreateNodeApiView(APIView):
 
         result = methods_model.create_node(request.data)
         return Response({'node': result}, status=status.HTTP_201_CREATED)
+
+
+
+
+
+    # instance = Node.objects.get(pk=8)
+    # instance.hidden = True
+    # instance.save()

@@ -7,7 +7,7 @@ from .validate_fields_model import Validate
 
 
 def get_tree(data: dict) -> dict:
-    """Метод вывода всех корневых узлов из модели Node"""
+    """Метод вывода всех узлов дерева из модели Node"""
 
     validate = Validate(data)
     validate.validate_fields_required()
@@ -16,7 +16,7 @@ def get_tree(data: dict) -> dict:
         project_id=data['project_id'],
         item_type=data['item_type'],
         item=data['item']
-    )
+    ).exclude(hidden=True)
 
     result = NodeSerializer(instance, many=True).data
     return result
@@ -34,7 +34,7 @@ def get_node(data: dict, pk: int) -> dict:
         project_id=data['project_id'],
         item_type=data['item_type'],
         item=data['item']
-    )
+    ).exclude(hidden=True)
 
     serializer = NodeSerializer(instance, many=False).data
     return serializer
@@ -53,13 +53,18 @@ def get_children(data: dict, pk: int) -> dict:
         path__startswith=path,
         project_id=data['project_id'],
         item_type=data['item_type'],
-        item=data['item'])
+        item=data['item']).exclude(hidden=True)
     result = NodeSerializer(queryset, many=True).data
     return result
 
 
 def create_node(data: dict):
-    """Метод создания нового узла в модели Node"""
+    """Метод создания нового узла в модели Node
+    Если в теле запроса передается параметр 'parent_id',
+    то будет создан дочерний узел родителя.
+    Если в теле запроса отсутсвует параметр 'parent_id',
+    то будет создан корневой узел.
+    """
 
     fields_allowed = ['parent_id', ]
 
@@ -74,7 +79,7 @@ def create_node(data: dict):
         parent = validate.validate_children_fields_value(parent_id)
         path = parent.path
         path += '0' * (10 - len(str(parent.id))) + str(parent.id)
-        num_child = Node.objects.filter(path=path)
+        num_child = Node.objects.filter(path=path).exclude(hidden=True)
         inner_order = len(num_child) + 1
     except KeyError:
         path = ""
@@ -87,6 +92,7 @@ def create_node(data: dict):
         item=data['item'],
         inner_order=inner_order,
         attributes=data.get('attributes'),
+        hidden=None
     )
     return NewNodeSerializer(node_new).data
 
@@ -97,12 +103,14 @@ def change_value_fields(data: dict, pk: int):
     serializer = NewNodeSerializer(data=data)
     serializer.is_valid(raise_exception=True)
 
+    # добавляем в валидатор разрешенные поля
     fields_allowed = ['inner_order', 'attributes']
     kwargs = {'pk': pk}
-
     validate = Validate(data, *fields_allowed, **kwargs)
     validate.validate_fields_required()
 
+    # получаем 2 объекта. Первый - у которого меняем значения полей
+    # Второй объект нужен, чтобы присвоить его полю inner_order значение поля inner_order первого объекта
     instances = validate.validation_change_fields()
 
     if data.get('inner_order'):
