@@ -1,5 +1,7 @@
 from django.db import models
 
+from rest_framework.exceptions import ValidationError
+
 
 class Node(models.Model):
     id = models.BigAutoField(primary_key=True)
@@ -12,12 +14,10 @@ class Node(models.Model):
     hidden = models.BooleanField(blank=True, null=True)
 
     def get_level_node(self):
-        if len(self.path) < 10:
-            return 0
-        elif len(self.path) == 10:
-            return 1
-        elif len(self.path) > 10:
+        if len(self.path) % 10 == 0:
             return len(self.path) // 10
+        else:
+            raise ValidationError(f"For object id {self.id} value field 'path' not a multiple of 10. Field 'path' generation error.")
 
     class Meta:
         db_table = 'tree_structure_node'
