@@ -92,15 +92,14 @@ def create_node(data: dict):
 
         path = parent.path
         path += '0' * (10 - len(str(parent.id))) + str(parent.id)
-
+        print(path)
         #Получаем все дочерние узлы родителя, чтобы сформировать inner_order для создаваемого узла
-        kwargs = {
-            "path": path,
-            "project_id": data['project_id'],
-            "item_type": data['item_type'],
-            "item": data['item']
-        }
-        amount_children = validate.get_object_from_model(Node, many=True, **kwargs)
+        amount_children = Node.objects.filter(
+            path=path,
+            project_id=data['project_id'],
+            item_type=data['item_type'],
+            item=data['item']
+        ).exclude(hidden=True)
         inner_order = len(amount_children) + 1
     except KeyError:
         path = ""
