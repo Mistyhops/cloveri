@@ -37,7 +37,9 @@ class GetNodeApiView(APIView):
 class GetNodesApiView(APIView):
     # v1/nodes/
     def get(self, request, **kwargs):
-        """Получить потомков узла, если передан id, иначе получить все корневые узлы"""
+        """Получить потомков узла, если передан id(pk), иначе получить дерево узелов
+        по 'project_id' 'item_type' 'item'
+        """
         pk = kwargs.get("pk", None)
         if not pk:
             result = methods_model.get_tree(request.data)

@@ -1,7 +1,12 @@
 from rest_framework.generics import get_object_or_404
 
+from rest_framework.exceptions import ValidationError
+from django.core.exceptions import ObjectDoesNotExist
+
 from ..models import Node
 from ..serializers import NodeSerializer, NewNodeSerializer
+
+
 
 from .validate_fields_model import Validate
 
@@ -28,13 +33,15 @@ def get_node(data: dict, pk: int) -> dict:
     validate = Validate(data)
     validate.validate_fields_required()
 
-    instance = get_object_or_404(
-        Node,
+    instance = Node.objects.filter(
         pk=pk,
         project_id=data['project_id'],
         item_type=data['item_type'],
         item=data['item']
-    ).exclude(hidden=True)
+    ).exclude(hidden=True).first()
+
+    if not instance:
+        raise ValidationError(f'does not exist object with id {pk}')
 
     serializer = NodeSerializer(instance, many=False).data
     return serializer
@@ -45,7 +52,11 @@ def get_children(data: dict, pk: int) -> dict:
     validate = Validate(data)
     validate.validate_fields_required()
 
-    instance = get_object_or_404(Node, pk=pk)
+    instance = Node.objects.filter(pk=pk).exclude(hidden=True).first()
+
+    if not instance:
+        raise ValidationError(f'does not exist object with id {pk}')
+
     path = instance.path
     path += '0' * (10 - len(str(instance.id))) + str(instance.id)
 
@@ -54,6 +65,7 @@ def get_children(data: dict, pk: int) -> dict:
         project_id=data['project_id'],
         item_type=data['item_type'],
         item=data['item']).exclude(hidden=True)
+
     result = NodeSerializer(queryset, many=True).data
     return result
 
@@ -77,8 +89,11 @@ def create_node(data: dict):
     try:
         parent_id = data['parent_id']
         parent = validate.validate_children_fields_value(parent_id)
+
         path = parent.path
         path += '0' * (10 - len(str(parent.id))) + str(parent.id)
+
+        #Получаем все дочерние узлы родителя, чтобы сформировать inner_order для создаваемого узла
         num_child = Node.objects.filter(path=path).exclude(hidden=True)
         inner_order = len(num_child) + 1
     except KeyError:
@@ -92,7 +107,6 @@ def create_node(data: dict):
         item=data['item'],
         inner_order=inner_order,
         attributes=data.get('attributes'),
-        hidden=None
     )
     return NewNodeSerializer(node_new).data
 
