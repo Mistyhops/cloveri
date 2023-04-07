@@ -17,11 +17,12 @@ def get_tree(data: dict) -> dict:
     validate = Validate(data)
     validate.validate_fields_required()
 
-    instance = Node.objects.filter(
-        project_id=data['project_id'],
-        item_type=data['item_type'],
-        item=data['item']
-    ).exclude(hidden=True)
+    kwargs = {
+        "project_id": data['project_id'],
+        "item_type": data['item_type'],
+        "item": data['item']
+    }
+    instance = validate.get_object_from_model(Node, many=True, **kwargs)
 
     result = NodeSerializer(instance, many=True).data
     return result
