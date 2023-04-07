@@ -68,11 +68,3 @@ class CreateNodeApiView(APIView):
 
         result = methods_model.create_node(request.data)
         return Response({'node': result}, status=status.HTTP_201_CREATED)
-
-
-
-
-
-    # instance = Node.objects.get(pk=8)
-    # instance.hidden = True
-    # instance.save()
