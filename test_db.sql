@@ -9,7 +9,7 @@ CREATE TABLE tree_structure_node(
 	item			text		NOT NULL,
 	inner_order		int8		NOT NULL,
 	attributes		jsonb,
-	hidden          bool
+	hidden          bool        DEFAULT NULL,
 
 	PRIMARY KEY(path, id)
 );
@@ -21,5 +21,3 @@ CREATE UNIQUE INDEX node_id_project_id_item_type_item
 
 CREATE INDEX node_project_id_item_type_item
 	ON tree_structure_node(project_id, item_type, item);
-
-

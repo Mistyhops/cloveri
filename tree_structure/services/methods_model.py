@@ -1,4 +1,3 @@
-from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
 
 from ..models import Node
@@ -62,7 +61,7 @@ def get_children(data: dict, pk: int) -> dict:
 def create_node(data: dict):
     """Метод создания нового узла в модели Node"""
 
-    fields_allowed = ['parent_id',]
+    fields_allowed = ['parent_id', ]
 
     validate = Validate(data, *fields_allowed)
     validate.validate_fields_required()
@@ -81,7 +80,6 @@ def create_node(data: dict):
         path = ""
         inner_order = 1
 
-
     node_new = Node.objects.create(
         path=path,
         project_id=data['project_id'],
@@ -94,7 +92,7 @@ def create_node(data: dict):
 
 
 def change_value_fields(data: dict, pk: int):
-    """Метод измедения значений полей 'attributes' и 'inner_order'
+    """Метод изменения значений полей 'attributes' и 'inner_order'
     """
     serializer = NewNodeSerializer(data=data)
     serializer.is_valid(raise_exception=True)
@@ -116,8 +114,4 @@ def change_value_fields(data: dict, pk: int):
         instances[0].attributes = data.get('attributes')
         instances[0].save()
 
-
     return NewNodeSerializer(instances[0]).data
-
-
-

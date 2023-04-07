@@ -29,17 +29,16 @@ class GetNodeApiView(APIView):
         result = methods_model.change_value_fields(request.data, pk)
         return Response({'node': result}, status=status.HTTP_201_CREATED)
 
-
     def delete(self):
         """Скрыть узел. Установить поле hidden=True"""
         pass
 
 
 class GetNodesApiView(APIView):
+
     # v1/nodes/
     def get(self, request, **kwargs):
         """Получить потомков узла, если передан id, иначе получить все корневые узлы"""
-
         pk = kwargs.get("pk", None)
         if not pk:
             result = methods_model.get_tree(request.data)
@@ -50,6 +49,8 @@ class GetNodesApiView(APIView):
 
 
 class CreateNodeApiView(APIView):
+
+    # v1/node/
     def post(self, request):
         """
         Создание нового узла. Запрос post.
@@ -64,6 +65,8 @@ class CreateNodeApiView(APIView):
         :return: при успешном выполнении запроса возвращает созданный объект, в ином случае - ошибку
         """
 
-        result = methods_model.create_node(request.data)
-        return Response({'node': result}, status=status.HTTP_201_CREATED)
-
+        try:
+            result = methods_model.create_node(request.data)
+            return Response({'node': result}, status=status.HTTP_201_CREATED)
+        except ValidationError as e:
+            return Response({'error': e}, status=status.HTTP_400_BAD_REQUEST)
