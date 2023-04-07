@@ -3,7 +3,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .services import methods_model
-
+from .models import Node
 
 class GetNodeApiView(APIView):
 
@@ -35,10 +35,11 @@ class GetNodeApiView(APIView):
 
 
 class GetNodesApiView(APIView):
-
     # v1/nodes/
     def get(self, request, **kwargs):
-        """Получить потомков узла, если передан id, иначе получить все корневые узлы"""
+        """Получить потомков узла, если передан id(pk), иначе получить дерево узелов
+        по 'project_id' 'item_type' 'item'
+        """
         pk = kwargs.get("pk", None)
         if not pk:
             result = methods_model.get_tree(request.data)
@@ -65,8 +66,5 @@ class CreateNodeApiView(APIView):
         :return: при успешном выполнении запроса возвращает созданный объект, в ином случае - ошибку
         """
 
-        try:
-            result = methods_model.create_node(request.data)
-            return Response({'node': result}, status=status.HTTP_201_CREATED)
-        except ValidationError as e:
-            return Response({'error': e}, status=status.HTTP_400_BAD_REQUEST)
+        result = methods_model.create_node(request.data)
+        return Response({'node': result}, status=status.HTTP_201_CREATED)

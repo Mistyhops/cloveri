@@ -6,7 +6,7 @@ from .models import Node
 class NodeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Node
-        fields = '__all__'
+        fields = ('id', 'path', 'project_id', 'item_type', 'item', 'inner_order', 'attributes')
 
 
 class NewNodeSerializer(serializers.ModelSerializer):
@@ -15,4 +15,4 @@ class NewNodeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Node
-        fields = ('id', 'path', 'project_id', 'item_type', 'item', 'inner_order', 'attributes',)
+        fields = ('id', 'path', 'project_id', 'item_type', 'item', 'inner_order', 'attributes')
