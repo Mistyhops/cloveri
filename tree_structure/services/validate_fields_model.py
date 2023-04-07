@@ -1,7 +1,6 @@
 from typing import Optional
 
 from rest_framework.exceptions import ValidationError
-from django.core.exceptions import ObjectDoesNotExist
 
 from ..models import Node
 
@@ -40,17 +39,13 @@ class Validate:
         if errors:
             raise ValidationError(errors)
 
-    def validate_children_fields_value(self, parent_id: int) -> object:
+    def validate_value_fields_for_create_child(self, parent_id: int) -> object:
         """Метод сверяет переданные значения project_id, item_type, item со значениями этих полей у родителя"""
 
         # если в request_data передан parent_id, значит попытка создать дочерний узел
         if 'parent_id' in self.request_data:
-            try:
-                instance = Node.objects.filter(pk=parent_id).exclude(hidden=True).first()
-            except ObjectDoesNotExist:
-                raise ValidationError(f'Parent with id {parent_id} does not exist.')
-            except Exception as e:
-                raise ValidationError(f'{e}')
+            kwargs = {"pk": parent_id}
+            instance = self.get_object_from_model(Node, many=False, **kwargs)
 
             errors = []
             if str(instance.project_id) != str(self.request_data['project_id']):
@@ -73,28 +68,39 @@ class Validate:
         instance_two = None
 
         # Получаем узел, поля которого будем менять (inner_order, attributes)
-        instance_change = Node.objects.filter(
-            pk=self.pk,
-            project_id=self.request_data['project_id'],
-            item_type=self.request_data['item_type'],
-            item=self.request_data['item'],
-        ).exclude(hidden=True).first()
-
-        if not instance_change:
-            raise ValidationError(f"Object not found")
+        kwargs = {
+            "pk": self.pk,
+            "project_id": self.request_data['project_id'],
+            "item_type": self.request_data['item_type'],
+            "item": self.request_data['item']
+        }
+        instance_change = self.get_object_from_model(Node, many=False, **kwargs)
 
         if self.request_data.get('inner_order'):
             path = instance_change.path
 
-            instance_two = Node.objects.filter(
-                path__startswith=path,
-                project_id=self.request_data['project_id'],
-                item_type=self.request_data['item_type'],
-                item=self.request_data['item'],
-                inner_order=self.request_data.get('inner_order')
-            ).exclude(hidden=True).first()
-
-            if not instance_two:
-                raise ValidationError(f"inner_order outside")
+            kwargs = {
+                "path__startswith": path,
+                "project_id": self.request_data['project_id'],
+                "item_type": self.request_data['item_type'],
+                "item": self.request_data['item'],
+                "inner_order": self.request_data.get('inner_order')
+            }
+            instance_two = self.get_object_from_model(Node, many=False, **kwargs)
 
         return instance_change, instance_two
+
+    def get_object_from_model(self, model: object, many: bool = False, **kwargs: Optional[dict]) -> object:
+        model = model
+
+        if many:
+            instance = model.objects.filter(**kwargs).exclude(hidden=True)
+        else:
+            instance = model.objects.filter(**kwargs).exclude(hidden=True).first()
+
+        if not instance:
+            raise ValidationError(f'does not exist object(s)')
+
+        return instance
+
+

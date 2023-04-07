@@ -33,15 +33,13 @@ def get_node(data: dict, pk: int) -> dict:
     validate = Validate(data)
     validate.validate_fields_required()
 
-    instance = Node.objects.filter(
-        pk=pk,
-        project_id=data['project_id'],
-        item_type=data['item_type'],
-        item=data['item']
-    ).exclude(hidden=True).first()
-
-    if not instance:
-        raise ValidationError(f'does not exist object with id {pk}')
+    kwargs = {
+        "pk": pk,
+        "project_id": data['project_id'],
+        "item_type": data['item_type'],
+        "item": data['item']
+    }
+    instance = validate.get_object_from_model(Node, many=False, **kwargs)
 
     serializer = NodeSerializer(instance, many=False).data
     return serializer
@@ -52,21 +50,23 @@ def get_children(data: dict, pk: int) -> dict:
     validate = Validate(data)
     validate.validate_fields_required()
 
-    instance = Node.objects.filter(pk=pk).exclude(hidden=True).first()
+    kwargs = {"pk": pk}
+    instance = validate.get_object_from_model(Node, many=False, **kwargs)
 
-    if not instance:
-        raise ValidationError(f'does not exist object with id {pk}')
-
+    #получаем path родителя
     path = instance.path
+    #формируем path дочерних узлов
     path += '0' * (10 - len(str(instance.id))) + str(instance.id)
 
-    queryset = Node.objects.filter(
-        path__startswith=path,
-        project_id=data['project_id'],
-        item_type=data['item_type'],
-        item=data['item']).exclude(hidden=True)
+    kwargs = {
+        "path__startswith": path,
+        "project_id": data['project_id'],
+        "item_type": data['item_type'],
+        "item": data['item']
+    }
+    instance = validate.get_object_from_model(Node, many=True, **kwargs)
 
-    result = NodeSerializer(queryset, many=True).data
+    result = NodeSerializer(instance, many=True).data
     return result
 
 
@@ -79,7 +79,6 @@ def create_node(data: dict):
     """
 
     fields_allowed = ['parent_id', ]
-
     validate = Validate(data, *fields_allowed)
     validate.validate_fields_required()
 
@@ -88,14 +87,20 @@ def create_node(data: dict):
 
     try:
         parent_id = data['parent_id']
-        parent = validate.validate_children_fields_value(parent_id)
+        parent = validate.validate_value_fields_for_create_child(parent_id)
 
         path = parent.path
         path += '0' * (10 - len(str(parent.id))) + str(parent.id)
 
         #Получаем все дочерние узлы родителя, чтобы сформировать inner_order для создаваемого узла
-        num_child = Node.objects.filter(path=path).exclude(hidden=True)
-        inner_order = len(num_child) + 1
+        kwargs = {
+            "path": path,
+            "project_id": data['project_id'],
+            "item_type": data['item_type'],
+            "item": data['item']
+        }
+        amount_children = validate.get_object_from_model(Node, many=True, **kwargs)
+        inner_order = len(amount_children) + 1
     except KeyError:
         path = ""
         inner_order = 1
