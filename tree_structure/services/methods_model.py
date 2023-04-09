@@ -1,8 +1,5 @@
-from django.db import transaction
-from rest_framework.generics import get_object_or_404
-
+from django.db import transaction, DatabaseError
 from rest_framework.exceptions import ValidationError
-from django.core.exceptions import ObjectDoesNotExist
 
 from ..models import Node
 from ..serializers import NodeSerializer, NewNodeSerializer
@@ -52,6 +49,8 @@ def get_children(data: dict, pk: int) -> dict:
     validate = Validate(data)
     validate.validate_fields_required()
 
+
+
     kwargs = {"pk": pk}
     instance = validate.get_object_from_model(Node, many=False, **kwargs)
 
@@ -72,6 +71,7 @@ def get_children(data: dict, pk: int) -> dict:
     return result
 
 
+@transaction.atomic()
 def create_node(data: dict):
     """Метод создания нового узла в модели Node
     Если в теле запроса передается параметр 'parent_id',
@@ -133,11 +133,15 @@ def change_value_fields(data: dict, pk: int):
     # Второй объект нужен, чтобы присвоить его полю inner_order значение поля inner_order первого объекта
     instances = validate.validation_change_fields()
 
-    with transaction.atomic():
-        if data.get('inner_order'):
-            instances[0].inner_order, instances[1].inner_order = instances[1].inner_order, instances[0].inner_order
-            instances[0].save()
-            instances[1].save()
+    try:
+        with transaction.atomic():
+            if data.get('inner_order'):
+                instances[0].inner_order, instances[1].inner_order = instances[1].inner_order, instances[0].inner_order
+                instances[0].save()
+                instances[1].save()
+    except DatabaseError as e:
+        raise ValidationError({'error': e})
+
 
     if data.get('attributes'):
         instances[0].attributes = data.get('attributes')

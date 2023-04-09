@@ -1,4 +1,3 @@
-from typing import Optional
 
 from rest_framework.exceptions import ValidationError, NotFound
 
@@ -37,7 +36,7 @@ class Validate:
                 errors.append(f'{attr} not allowed')
 
         if errors:
-            raise ValidationError(errors)
+            raise ValidationError({'errors': errors})
 
     def validate_value_fields_for_create_child(self, parent_id: int) -> object:
         """Метод сверяет переданные значения project_id, item_type, item со значениями этих полей у родителя"""
