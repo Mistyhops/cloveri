@@ -1,5 +1,5 @@
 from django.db import transaction, DatabaseError
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError, NotFound
 
 from ..models import Node
 from ..serializers import NodeSerializer, NewNodeSerializer
