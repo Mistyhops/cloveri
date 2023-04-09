@@ -1,7 +1,5 @@
-from typing import Optional
 
-from django.db import models
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError, NotFound
 
 from ..models import Node
 
@@ -14,7 +12,7 @@ class Validate:
         'item',
     )
 
-    def __init__(self, request_data: dict, *args: Optional[list], **kwargs: Optional[dict]):
+    def __init__(self, request_data: dict, *args, **kwargs):
         self.request_data = request_data
         self.fields_pk = Validate.fields_pk
         self.fields_allowed = Validate.fields_pk
@@ -39,7 +37,7 @@ class Validate:
                 errors.append(f'{attr} not allowed')
 
         if errors:
-            raise ValidationError(errors)
+            raise ValidationError({'errors': errors})
 
     def validate_value_fields_for_create_child(self, parent_id: int) -> object:
         """Метод сверяет переданные значения project_id, item_type, item со значениями этих полей у родителя"""
@@ -57,7 +55,7 @@ class Validate:
             if str(instance.item) != str(self.request_data['item']):
                 errors.append(f"Value 'item' must match the parent")
             if errors:
-                raise ValidationError(errors)
+                raise ValidationError({'errors': errors})
 
             return instance
 
@@ -67,7 +65,8 @@ class Validate:
         или для какого-то одного поля.
         """
 
-        instance_two = None
+        # будет содержать узел, с последним по счету inner_order
+        instance_original_inner_order = None
 
         # Получаем узел, поля которого будем менять (inner_order, attributes)
         kwargs = {
@@ -78,6 +77,7 @@ class Validate:
         }
         instance_change = self.get_object_from_model(Node, many=False, **kwargs)
 
+        #Если в запрос был передан парамерт inner_order, то ищем узел с таким inner_order
         if self.request_data.get('inner_order'):
             path = instance_change.path
 
@@ -88,17 +88,19 @@ class Validate:
                 "item": self.request_data['item'],
                 "inner_order": self.request_data.get('inner_order')
             }
-            instance_two = self.get_object_from_model(Node, many=False, **kwargs)
+            instance_original_inner_order = self.get_object_from_model(Node, many=False, **kwargs)
 
-        return instance_change, instance_two
+        return instance_change, instance_original_inner_order
 
-    def get_object_from_model(self, model: models.Model, many: bool = False, **kwargs: Optional[dict]) -> object:
+    def get_object_from_model(self, model: object, many: bool = False, **kwargs) -> object:
+        model = model
+
         if many:
             instance = model.objects.filter(**kwargs).exclude(hidden=True)
         else:
             instance = model.objects.filter(**kwargs).exclude(hidden=True).first()
 
         if not instance:
-            raise ValidationError(f'does not exist object(s)')
+            raise NotFound({'error': 'does not exist object(s)'})
 
         return instance
