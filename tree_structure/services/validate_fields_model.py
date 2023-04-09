@@ -1,5 +1,6 @@
 from typing import Optional
 
+from django.db import models
 from rest_framework.exceptions import ValidationError
 
 from ..models import Node
@@ -21,8 +22,9 @@ class Validate:
         self.pk = kwargs.get('pk')
 
     def validate_fields_required(self):
-        """Метод проверяет, что в request.data переданы агрументы project_id, item_type, item,
-        а также другие необходимые поля"""
+        """Метод проверяет, что в request.data переданы аргументы project_id, item_type, item,
+        а также другие необходимые поля
+        """
 
         errors = []
 
@@ -60,7 +62,7 @@ class Validate:
             return instance
 
     def validation_change_fields(self) -> list:
-        """Метод проверяет парамерты для смены inner_order или изменение поля attributes.
+        """Метод проверяет параметры для смены inner_order или изменение поля attributes.
         Учитываем, что запрос на изменение может быть для двух полей одновременно
         или для какого-то одного поля.
         """
@@ -90,9 +92,7 @@ class Validate:
 
         return instance_change, instance_two
 
-    def get_object_from_model(self, model: object, many: bool = False, **kwargs: Optional[dict]) -> object:
-        model = model
-
+    def get_object_from_model(self, model: models.Model, many: bool = False, **kwargs: Optional[dict]) -> object:
         if many:
             instance = model.objects.filter(**kwargs).exclude(hidden=True)
         else:
@@ -102,5 +102,3 @@ class Validate:
             raise ValidationError(f'does not exist object(s)')
 
         return instance
-
-
