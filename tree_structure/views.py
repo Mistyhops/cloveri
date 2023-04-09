@@ -1,9 +1,12 @@
+from django.db import transaction
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
 from .services import methods_model
 from .models import Node
+
 
 class GetNodeApiView(APIView):
 
@@ -29,15 +32,29 @@ class GetNodeApiView(APIView):
         result = methods_model.change_value_fields(request.data, pk)
         return Response({'node': result}, status=status.HTTP_201_CREATED)
 
-    def delete(self):
-        """Скрыть узел. Установить поле hidden=True"""
-        pass
+    # v1/node/<int:pk>/
+    def delete(self, request, **kwargs):
+        """
+        Скрыть узел. Установить поле hidden=True
+        :param request: в теле запроса принимает следующие параметры:
+        project_id: uuid проекта, обязательный параметр
+        item_type: обязательный параметр
+        item: обязательный параметр
+        :return: строку с результатом
+        """
+
+        pk = kwargs.get('pk')
+        if not pk:
+            return Response({'error': 'pk can\'t be None'})
+
+        result = methods_model.delete_node(request.data, pk)
+        return Response({'detail': result}, status=status.HTTP_200_OK)
 
 
 class GetNodesApiView(APIView):
     # v1/nodes/
     def get(self, request, **kwargs):
-        """Получить потомков узла, если передан id(pk), иначе получить дерево узелов
+        """Получить потомков узла, если передан id(pk), иначе получить дерево узлов
         по 'project_id' 'item_type' 'item'
         """
         pk = kwargs.get("pk", None)

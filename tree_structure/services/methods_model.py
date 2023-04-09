@@ -3,9 +3,6 @@ from rest_framework.exceptions import ValidationError
 
 from ..models import Node
 from ..serializers import NodeSerializer, NewNodeSerializer
-
-
-
 from .validate_fields_model import Validate
 
 
@@ -54,9 +51,9 @@ def get_children(data: dict, pk: int) -> dict:
     kwargs = {"pk": pk}
     instance = validate.get_object_from_model(Node, many=False, **kwargs)
 
-    #получаем path родителя
+    # получаем path родителя
     path = instance.path
-    #формируем path дочерних узлов
+    # формируем path дочерних узлов
     path += '0' * (10 - len(str(instance.id))) + str(instance.id)
 
     kwargs = {
@@ -148,3 +145,32 @@ def change_value_fields(data: dict, pk: int):
         instances[0].save()
 
     return NewNodeSerializer(instances[0]).data
+
+
+def delete_node(data: dict, pk: int):
+    """Метод скрытия узла, установки параметра hidden=True"""
+
+    serializer = NewNodeSerializer(data=data)
+    serializer.is_valid(raise_exception=True)
+
+    validate = Validate(data)
+    validate.validate_fields_required()
+
+    try:
+        with transaction.atomic():
+            instance = Node.objects.select_for_update().filter(
+                id=pk,
+                project_id=data['project_id'],
+                item_type=data['item_type'],
+                item=data['item'],
+            ).exclude(hidden=True).first()
+
+            if not instance:
+                raise NotFound('Object not found')
+
+            instance.hidden = True
+            instance.save()
+    except DatabaseError as e:
+        raise ValidationError({'error': e})
+
+    return 'Node deleted'
