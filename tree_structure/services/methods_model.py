@@ -1,13 +1,13 @@
+from django.db import transaction, DatabaseError
+from django.db.transaction import TransactionManagementError
+from rest_framework import status
 from rest_framework.generics import get_object_or_404
 
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError, _get_error_details, NotFound
 from django.core.exceptions import ObjectDoesNotExist
 
 from ..models import Node
 from ..serializers import NodeSerializer, NewNodeSerializer
-
-
-
 from .validate_fields_model import Validate
 
 
@@ -54,9 +54,9 @@ def get_children(data: dict, pk: int) -> dict:
     kwargs = {"pk": pk}
     instance = validate.get_object_from_model(Node, many=False, **kwargs)
 
-    #получаем path родителя
+    # получаем path родителя
     path = instance.path
-    #формируем path дочерних узлов
+    # формируем path дочерних узлов
     path += '0' * (10 - len(str(instance.id))) + str(instance.id)
 
     kwargs = {
@@ -93,7 +93,7 @@ def create_node(data: dict):
         path = parent.path
         path += '0' * (10 - len(str(parent.id))) + str(parent.id)
 
-        #Получаем все дочерние узлы родителя, чтобы сформировать inner_order для создаваемого узла
+        # Получаем все дочерние узлы родителя, чтобы сформировать inner_order для создаваемого узла
         amount_children = Node.objects.filter(
             path=path,
             project_id=data['project_id'],
@@ -142,3 +142,32 @@ def change_value_fields(data: dict, pk: int):
         instances[0].save()
 
     return NewNodeSerializer(instances[0]).data
+
+
+def delete_node(data: dict, pk: int):
+    """Метод скрытия узла, установки параметра hidden=True"""
+
+    serializer = NewNodeSerializer(data=data)
+    serializer.is_valid(raise_exception=True)
+
+    validate = Validate(data)
+    validate.validate_fields_required()
+
+    try:
+        with transaction.atomic():
+            instance = Node.objects.select_for_update().filter(
+                id=pk,
+                project_id=data['project_id'],
+                item_type=data['item_type'],
+                item=data['item'],
+            ).exclude(hidden=True).first()
+
+            if not instance:
+                raise NotFound('Object not found')
+
+            instance.hidden = True
+            instance.save()
+    except DatabaseError as e:
+        raise ValidationError({'error': e})
+
+    return 'Node deleted'
