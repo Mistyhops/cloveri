@@ -46,8 +46,6 @@ def get_children(data: dict, pk: int) -> dict:
     validate = Validate(data)
     validate.validate_fields_required()
 
-
-
     kwargs = {"pk": pk}
     instance = validate.get_object_from_model(Node, many=False, **kwargs)
 
@@ -97,7 +95,7 @@ def create_node(data: dict):
             project_id=data['project_id'],
             item_type=data['item_type'],
             item=data['item']
-        ).exclude(hidden=True).count()
+        ).count()
         inner_order = amount_children + 1
     except KeyError:
         path = ""
