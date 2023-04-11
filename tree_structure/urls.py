@@ -12,11 +12,11 @@ urlpatterns = [
 
     path('v1/node/', CreateNodeApiView.as_view()),
 
-    path('docs/', TemplateView.as_view(
-        template_name='documentation.html',
-        extra_context={'schema_url': 'openapi/'}
-    ), name='swagger-ui'),
-    path('docs/openapi/', get_schema_view(
-        title="Tree API",
-    ), name='openapi-schema'),
+    # path('docs/', TemplateView.as_view(
+    #     template_name='documentation.html',
+    #     extra_context={'schema_url': 'openapi/'}
+    # ), name='swagger-ui'),
+    # path('docs/openapi/', get_schema_view(
+    #     title="Tree API",
+    # ), name='openapi-schema'),
 ]
