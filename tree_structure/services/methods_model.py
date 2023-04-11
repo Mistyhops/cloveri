@@ -75,7 +75,7 @@ def create_node(data: dict):
     то будет создан корневой узел.
     """
 
-    fields_allowed = ['parent_id', ]
+    fields_allowed = ['parent_id', 'attributes']
     validate = Validate(data, *fields_allowed)
     validate.validate_fields_required()
 

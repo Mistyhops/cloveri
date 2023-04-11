@@ -37,8 +37,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'rest_framework',
-    'rest_framework_swagger',
 
+    # 'rest_framework_swagger',
+    'drf_yasg',
     'tree_structure.apps.TreeStructureConfig',
 ]
 
@@ -130,3 +131,18 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+SWAGGER_SETTINGS = {
+    'USE_SESSION_AUTH': False,
+    'SECURITY_DEFINITIONS': {
+        'basic': {
+            'type': 'basic'
+        }
+    },
+}
+
+
+REDOC_SETTINGS = {
+   'LAZY_RENDERING': False,
+}
