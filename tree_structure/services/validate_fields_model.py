@@ -1,4 +1,4 @@
-
+from django.db import models
 from rest_framework.exceptions import ValidationError, NotFound
 
 from ..models import Node
@@ -77,7 +77,7 @@ class Validate:
         }
         instance_change = self.get_object_from_model(Node, many=False, **kwargs)
 
-        #Если в запрос был передан парамерт inner_order, то ищем узел с таким inner_order
+        # Если в запрос был передан параметр inner_order, то ищем узел с таким inner_order
         if self.request_data.get('inner_order'):
             path = instance_change.path
 
@@ -92,9 +92,7 @@ class Validate:
 
         return instance_change, instance_original_inner_order
 
-    def get_object_from_model(self, model: object, many: bool = False, **kwargs) -> object:
-        model = model
-
+    def get_object_from_model(self, model: models.Model, many: bool = False, **kwargs) -> object:
         if many:
             instance = model.objects.filter(**kwargs).exclude(hidden=True)
         else:

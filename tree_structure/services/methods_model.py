@@ -126,7 +126,6 @@ def change_value_fields(data: dict, pk: int):
     except DatabaseError as e:
         raise ValidationError({'error': e})
 
-
     if data.get('attributes'):
         instances[0].attributes = data.get('attributes')
         instances[0].save()

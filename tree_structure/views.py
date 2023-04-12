@@ -1,11 +1,8 @@
-from django.db import transaction
 from rest_framework import status
-from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .services import methods_model
-from .models import Node
 
 
 class NodeApiView(APIView):
@@ -41,7 +38,7 @@ class NodeApiView(APIView):
 
     # v1/node/<int:pk>/
     def put(self, request, **kwargs):
-        """Изменить поля attributes и inner_order в моделе Node"""
+        """Изменить поля attributes и inner_order в модели Node"""
 
         pk = kwargs.get("pk", None)
         if not pk:

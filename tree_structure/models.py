@@ -17,7 +17,8 @@ class Node(models.Model):
         if len(self.path) % 10 == 0:
             return len(self.path) // 10
         else:
-            raise ValidationError(f"For object id {self.id} value field 'path' not a multiple of 10. Field 'path' generation error.")
+            raise ValidationError(f"For object id {self.id} value field 'path' not a multiple of 10. "
+                                  f"Field 'path' generation error.")
 
     class Meta:
         db_table = 'tree_structure_node'
