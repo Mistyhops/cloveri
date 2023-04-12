@@ -13,7 +13,6 @@ class NodeSerializer(serializers.ModelSerializer):
 
 class NewNodeSerializer(serializers.ModelSerializer):
     path = serializers.CharField(read_only=True)
-    inner_order = serializers.IntegerField(read_only=True)
     level_node = serializers.IntegerField(source='get_level_node', read_only=True)
 
     class Meta:

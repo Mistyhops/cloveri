@@ -142,7 +142,10 @@ SWAGGER_SETTINGS = {
     },
 }
 
-
 REDOC_SETTINGS = {
    'LAZY_RENDERING': False,
+}
+
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
 }
