@@ -66,47 +66,36 @@ def get_children(data: dict, pk: int) -> dict:
     return result
 
 
-@transaction.atomic()
 def create_node(data: dict):
     """Метод создания нового узла в модели Node
     Если в теле запроса передается параметр 'parent_id',
     то будет создан дочерний узел родителя.
-    Если в теле запроса отсутсвует параметр 'parent_id',
+    Если в теле запроса отсутствует параметр 'parent_id',
     то будет создан корневой узел.
     """
 
-    fields_allowed = ['parent_id', 'attributes']
+    fields_allowed = ['parent_id', 'attributes', 'inner_order']
     validate = Validate(data, *fields_allowed)
     validate.validate_fields_required()
 
     serializer = NewNodeSerializer(data=data)
     serializer.is_valid(raise_exception=True)
 
-    try:
+    if data.get('parent_id'):
         parent_id = data['parent_id']
         parent = validate.validate_value_fields_for_create_child(parent_id)
 
         path = parent.path
         path += '0' * (10 - len(str(parent.id))) + str(parent.id)
-
-        #Получаем количесво дочерних узлов родителя, чтобы сформировать inner_order для создаваемого узла
-        amount_children = Node.objects.filter(
-            path=path,
-            project_id=data['project_id'],
-            item_type=data['item_type'],
-            item=data['item']
-        ).count()
-        inner_order = amount_children + 1
-    except KeyError:
+    else:
         path = ""
-        inner_order = 1
 
     node_new = Node.objects.create(
         path=path,
         project_id=data['project_id'],
         item_type=data['item_type'],
         item=data['item'],
-        inner_order=inner_order,
+        inner_order=data.get('inner_order'),
         attributes=data.get('attributes'),
     )
     return NewNodeSerializer(node_new).data

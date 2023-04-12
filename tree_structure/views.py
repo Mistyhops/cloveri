@@ -8,7 +8,7 @@ from .services import methods_model
 from .models import Node
 
 
-class GetNodeApiView(APIView):
+class NodeApiView(APIView):
 
     # v1/node/<int:pk>/
     def get(self, request, **kwargs):
@@ -16,10 +16,28 @@ class GetNodeApiView(APIView):
 
         pk = kwargs.get("pk", None)
         if not pk:
-            return Response({'error': 'pk cannot be null'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'pk cannot be null'}, status=status.HTTP_400_BAD_REQUEST)
 
-        result = methods_model.get_node(request.data, pk)
+        result = methods_model.get_node(request.GET, pk)
         return Response({'node': result}, status=status.HTTP_200_OK)
+
+    # v1/node/
+    def post(self, request):
+        """
+        Создание нового узла. Запрос post.
+        :param request: в теле запроса принимает следующие параметры:
+        parent_id (optional): id родителя, передается при создании дочернего (некорневого) узла
+        project_id: uuid проекта, обязательный параметр, при создании дочернего узла сверяется с соответствующим
+        полем (project_id) родителя, при несоответствии возвращает ответ 400
+        item_type: обязательный параметр, при создании дочернего узла сверяется с соответствующим полем (item_type)
+        родителя, при несоответствии возвращает ответ 400
+        item: обязательный параметр, при создании дочернего узла сверяется с соответствующим полем (item) родителя,
+        при несоответствии возвращает ответ 400
+        :return: при успешном выполнении запроса возвращает созданный объект, в ином случае - ошибку
+        """
+
+        result = methods_model.create_node(request.data)
+        return Response({'node': result}, status=status.HTTP_201_CREATED)
 
     # v1/node/<int:pk>/
     def put(self, request, **kwargs):
@@ -27,7 +45,7 @@ class GetNodeApiView(APIView):
 
         pk = kwargs.get("pk", None)
         if not pk:
-            return Response({'error': 'pk cannot be null'})
+            return Response({'error': 'pk cannot be null'}, status=status.HTTP_400_BAD_REQUEST)
 
         result = methods_model.change_value_fields(request.data, pk)
         return Response({'node': result}, status=status.HTTP_201_CREATED)
@@ -51,7 +69,7 @@ class GetNodeApiView(APIView):
         return Response({'detail': result}, status=status.HTTP_200_OK)
 
 
-class GetNodesApiView(APIView):
+class NodesApiView(APIView):
     # v1/nodes/
     def get(self, request, **kwargs):
         """Получить потомков узла, если передан id(pk), иначе получить дерево узлов
@@ -59,29 +77,11 @@ class GetNodesApiView(APIView):
         """
         pk = kwargs.get("pk", None)
         if not pk:
-            result = methods_model.get_tree(request.data)
+            result = methods_model.get_tree(request.GET)
             return Response({'nodes': result}, status=status.HTTP_200_OK)
 
-        result = methods_model.get_children(request.data, pk)
+        result = methods_model.get_children(request.GET, pk)
         return Response({'nodes': result}, status=status.HTTP_200_OK)
 
 
-class CreateNodeApiView(APIView):
 
-    # v1/node/
-    def post(self, request):
-        """
-        Создание нового узла. Запрос post.
-        :param request: в теле запроса принимает следующие параметры:
-        parent_id (optional): id родителя, передается при создании дочернего (некорневого) узла
-        project_id: uuid проекта, обязательный параметр, при создании дочернего узла сверяется с соответствующим
-        полем (project_id) родителя, при несоответствии возвращает ответ 400
-        item_type: обязательный параметр, при создании дочернего узла сверяется с соответствующим полем (item_type)
-        родителя, при несоответствии возвращает ответ 400
-        item: обязательный параметр, при создании дочернего узла сверяется с соответствующим полем (item) родителя,
-        при несоответствии возвращает ответ 400
-        :return: при успешном выполнении запроса возвращает созданный объект, в ином случае - ошибку
-        """
-
-        result = methods_model.create_node(request.data)
-        return Response({'node': result}, status=status.HTTP_201_CREATED)
