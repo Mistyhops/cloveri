@@ -89,7 +89,7 @@ def create_node(data: dict):
         path = parent.path
         path += '0' * (10 - len(str(parent.id))) + str(parent.id)
 
-        #Получаем количесво дочерних узлов родителя, чтобы сформировать inner_order для создаваемого узла
+        # Получаем количество дочерних узлов родителя, чтобы сформировать inner_order для создаваемого узла
         amount_children = Node.objects.filter(
             path=path,
             project_id=data['project_id'],
@@ -136,7 +136,6 @@ def change_value_fields(data: dict, pk: int):
                 instances[1].save()
     except DatabaseError as e:
         raise ValidationError({'error': e})
-
 
     if data.get('attributes'):
         instances[0].attributes = data.get('attributes')
