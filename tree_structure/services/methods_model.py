@@ -2,7 +2,7 @@ from django.db import transaction, DatabaseError
 from rest_framework.exceptions import ValidationError, NotFound
 
 from ..models import Node
-from ..serializers import NodeSerializer, NewNodeSerializer
+from ..serializers import NodeSerializer, NewNodeSerializer, UpdateNodeSerializer
 from .validate_fields_model import Validate
 
 
@@ -104,11 +104,11 @@ def create_node(data: dict):
 def change_value_fields(data: dict, pk: int):
     """Метод изменения значений полей 'attributes' и 'inner_order'
     """
-    serializer = NewNodeSerializer(data=data)
+    serializer = UpdateNodeSerializer(data=data)
     serializer.is_valid(raise_exception=True)
 
     # добавляем в валидатор разрешенные поля
-    fields_allowed = ['inner_order', 'attributes']
+    fields_allowed = ['attributes',]
     kwargs = {'pk': pk}
     validate = Validate(data, *fields_allowed, **kwargs)
     validate.validate_fields_required()
@@ -117,14 +117,14 @@ def change_value_fields(data: dict, pk: int):
     # Второй объект нужен, чтобы присвоить его полю inner_order значение поля inner_order первого объекта
     instances = validate.validation_change_fields()
 
-    try:
-        with transaction.atomic():
-            if data.get('inner_order'):
-                instances[0].inner_order, instances[1].inner_order = instances[1].inner_order, instances[0].inner_order
-                instances[0].save()
-                instances[1].save()
-    except DatabaseError as e:
-        raise ValidationError({'error': e})
+    # try:
+    #     with transaction.atomic():
+    #         if data.get('inner_order'):
+    #             instances[0].inner_order, instances[1].inner_order = instances[1].inner_order, instances[0].inner_order
+    #             instances[0].save()
+    #             instances[1].save()
+    # except DatabaseError as e:
+    #     raise ValidationError({'error': e})
 
 
     if data.get('attributes'):
