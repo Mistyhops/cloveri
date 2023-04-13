@@ -79,6 +79,3 @@ class NodesApiView(APIView):
 
         result = methods_model.get_children(request.GET, pk)
         return Response({'nodes': result}, status=status.HTTP_200_OK)
-
-
-
