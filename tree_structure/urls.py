@@ -1,16 +1,16 @@
 from django.urls import path
-from django.views.generic import TemplateView
-from rest_framework.schemas import get_schema_view
 
-from .views import NodeApiView, NodesApiView
+from .views import NodeApiView, NodesApiView, RestoreNodeApiView
 
 urlpatterns = [
-    #get_tree
+    # get_tree
     path('v1/nodes/', NodesApiView.as_view()),
-    #get_children
+    # get_children
     path('v1/nodes/<int:pk>/', NodesApiView.as_view()),
-    #create_node
+    # create_node
     path('v1/node/', NodeApiView.as_view()),
-    #get_node, #put_node, #delete_node
+    # get_node, #put_node, #delete_node
     path('v1/node/<int:pk>/', NodeApiView.as_view()),
+    # restore_node
+    path('v1/node/<int:pk>/restore/', RestoreNodeApiView.as_view()),
 ]

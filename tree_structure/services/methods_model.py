@@ -160,3 +160,33 @@ def delete_node(data: dict, pk: int):
         raise ValidationError({'error': e})
 
     return 'Node deleted'
+
+
+def restore_node(data: dict, pk: int):
+    """Метод скрытия узла, установки параметра hidden=True"""
+
+    serializer = UpdateNodeSerializer(data=data)
+    serializer.is_valid(raise_exception=True)
+
+    validate = Validate(data)
+    validate.validate_fields_required()
+
+    try:
+        with transaction.atomic():
+            instance = Node.objects.select_for_update().filter(
+                id=pk,
+                project_id=data['project_id'],
+                item_type=data['item_type'],
+                item=data['item'],
+                hidden=True,
+            ).first()
+
+            if not instance:
+                raise NotFound('Object not found')
+
+            instance.hidden = None
+            instance.save()
+    except DatabaseError as e:
+        raise ValidationError({'error': e})
+
+    return 'Node restored'

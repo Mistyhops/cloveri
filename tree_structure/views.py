@@ -79,3 +79,24 @@ class NodesApiView(APIView):
 
         result = methods_model.get_children(request.GET, pk)
         return Response({'nodes': result}, status=status.HTTP_200_OK)
+
+
+class RestoreNodeApiView(APIView):
+
+    # v1/node/<int:pk>/restore/
+    def put(self, request, **kwargs):
+        """
+        Восстановить узел. Установить поле hidden=None
+        :param request: в теле запроса принимает следующие параметры:
+        project_id: uuid проекта, обязательный параметр
+        item_type: обязательный параметр
+        item: обязательный параметр
+        :return: строку с результатом
+        """
+
+        pk = kwargs.get('pk')
+        if not pk:
+            return Response({'error': 'pk can\'t be None'})
+
+        result = methods_model.restore_node(request.data, pk)
+        return Response({'detail': result}, status=status.HTTP_200_OK)
