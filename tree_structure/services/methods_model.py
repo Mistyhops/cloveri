@@ -136,7 +136,7 @@ def change_value_fields(data: dict, pk: int):
 def delete_node(data: dict, pk: int):
     """Метод скрытия узла, установки параметра hidden=True"""
 
-    serializer = NewNodeSerializer(data=data)
+    serializer = UpdateNodeSerializer(data=data)
     serializer.is_valid(raise_exception=True)
 
     validate = Validate(data)
