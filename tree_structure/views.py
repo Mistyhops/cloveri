@@ -91,7 +91,7 @@ class RestoreNodeApiView(APIView):
         project_id: uuid проекта, обязательный параметр
         item_type: обязательный параметр
         item: обязательный параметр
-        :return: строку с результатом
+        :return: восстановленный объект
         """
 
         pk = kwargs.get('pk')
@@ -99,4 +99,4 @@ class RestoreNodeApiView(APIView):
             return Response({'error': 'pk can\'t be None'})
 
         result = methods_model.restore_node(request.data, pk)
-        return Response({'detail': result}, status=status.HTTP_200_OK)
+        return Response({'node': result}, status=status.HTTP_200_OK)

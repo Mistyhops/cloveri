@@ -189,4 +189,4 @@ def restore_node(data: dict, pk: int):
     except DatabaseError as e:
         raise ValidationError({'error': e})
 
-    return 'Node restored'
+    return NewNodeSerializer(instance).data
