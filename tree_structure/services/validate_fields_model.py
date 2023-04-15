@@ -1,3 +1,5 @@
+import json
+import uuid
 from django.db import models
 from rest_framework.exceptions import ValidationError, NotFound
 
@@ -35,6 +37,9 @@ class Validate:
         for attr in self.request_data:
             if attr not in self.fields_allowed:
                 errors.append(f'{attr} not allowed')
+
+        # Проверка форматов переданных полей
+        errors += self._validate_fields_format()
 
         if errors:
             raise ValidationError({'errors': errors})
@@ -102,3 +107,54 @@ class Validate:
             raise NotFound({'error': 'does not exist object(s)'})
 
         return instance
+
+    def _validate_fields_format(self):
+        errors = []
+
+        # Проверка форматов переданных полей
+        project_id = self.request_data.get('project_id')
+        if project_id and not isinstance(project_id, uuid.UUID):
+            try:
+                uuid.UUID(project_id)
+            except (AttributeError, ValueError) as e:
+                errors.append('project_id has wrong format, must be uuid')
+
+        item_type = self.request_data.get('item_type')
+        if item_type and not isinstance(item_type, str):
+            try:
+                str(item_type)
+            except ValueError:
+                errors.append('item_type has wrong format, must be str')
+
+        item = self.request_data.get('item')
+        if item and not isinstance(item, str):
+            try:
+                str(item_type)
+            except ValueError:
+                errors.append('item has wrong format, must be str')
+
+        parent_id = self.request_data.get('parent_id')
+        if parent_id and not isinstance(parent_id, int):
+            try:
+                int(parent_id)
+            except ValueError:
+                errors.append('parent_id has wrong format, must be int')
+
+        inner_order = self.request_data.get('inner_order')
+        if inner_order and not isinstance(inner_order, int):
+            try:
+                int(inner_order)
+            except ValueError:
+                errors.append('inner_order has wrong format, must be int')
+
+        attributes = self.request_data.get('attributes')
+        if attributes:
+            if isinstance(attributes, str):
+                try:
+                    json.loads(attributes)
+                except json.decoder.JSONDecodeError:
+                    errors.append('attributes has wrong format, must be json')
+            else:
+                errors.append('attributes has wrong format, must be json')
+
+        return errors
