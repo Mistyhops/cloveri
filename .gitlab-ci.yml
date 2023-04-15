@@ -1,19 +1,30 @@
+image: docker:latest
+
+services:
+  - docker:dind
+
 stages:
   - build
   - test
   - deploy
 
+before_script:
+  - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+
 build:
   stage: build
   script:
-    - echo "Building the application..."
+    - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA .
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
 
 test:
   stage: test
   script:
-    - echo "Running tests..."
+    - docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+    - docker run --rm $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA python manage.py test
 
 deploy:
   stage: deploy
   script:
-    - echo "Deploying the application..."
+    - docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+    - docker-compose up -d
