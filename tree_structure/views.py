@@ -67,11 +67,13 @@ class NodeApiView(APIView):
 
 
 class NodesApiView(APIView):
+
     # v1/nodes/
     def get(self, request, **kwargs):
         """Получить потомков узла, если передан id(pk), иначе получить дерево узлов
         по 'project_id' 'item_type' 'item'
         """
+
         pk = kwargs.get("pk", None)
         if not pk:
             result = methods_model.get_tree(request.GET)
