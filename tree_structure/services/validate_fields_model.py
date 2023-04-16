@@ -148,7 +148,7 @@ class Validate:
                 errors.append('inner_order has wrong format, must be int')
 
         attributes = self.request_data.get('attributes')
-        if attributes:
+        if attributes and not isinstance(attributes, dict):
             if isinstance(attributes, str):
                 try:
                     json.loads(attributes)
