@@ -121,34 +121,22 @@ class Validate:
 
         item_type = self.request_data.get('item_type')
         if item_type and not isinstance(item_type, str):
-            try:
-                str(item_type)
-            except ValueError:
-                errors.append('item_type has wrong format, must be str')
+            errors.append('item_type has wrong format, must be str')
 
         item = self.request_data.get('item')
         if item and not isinstance(item, str):
-            try:
-                str(item_type)
-            except ValueError:
-                errors.append('item has wrong format, must be str')
+            errors.append('item has wrong format, must be str')
 
         parent_id = self.request_data.get('parent_id')
         if parent_id and not isinstance(parent_id, int):
-            try:
-                int(parent_id)
-            except ValueError:
-                errors.append('parent_id has wrong format, must be int')
+            errors.append('parent_id has wrong format, must be int')
 
         inner_order = self.request_data.get('inner_order')
         if inner_order and not isinstance(inner_order, int):
-            try:
-                int(inner_order)
-            except ValueError:
-                errors.append('inner_order has wrong format, must be int')
+            errors.append('inner_order has wrong format, must be int')
 
         attributes = self.request_data.get('attributes')
-        if attributes and not isinstance(attributes, dict):
+        if attributes:
             if isinstance(attributes, str):
                 try:
                     json.loads(attributes)
