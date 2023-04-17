@@ -7,7 +7,7 @@ stop_server:
         stage: stop_server
         script:
                 - echo "Stopping Django server"
-                - killall -9 python3
+                - sudo killall -9 python3
 
 pull_code:
         stage: pull_code
