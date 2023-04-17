@@ -1,30 +1,22 @@
-image: docker:latest
-
-services:
-  - docker:dind
-
 stages:
-  - build
-  - test
-  - deploy
+  - stop_server
+  - pull_code
+  - start_server
 
-before_script:
-  - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-
-build:
-  stage: build
+stop_server:
+  stage: stop_server
   script:
-    - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA .
-    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+    - echo "Stopping Django server"
+    - tree# pkill -f python3
 
-test:
-  stage: test
+pull_code:
+  stage: pull_code
   script:
-    - docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
-    - docker run --rm $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA python manage.py test
+    - echo "Pulling latest code from GitLab"
+    - git pull origin develop
 
-deploy:
-  stage: deploy
+start_server:
+  stage: start_server
   script:
-    - docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
-    - docker-compose up -d
+    - echo "Starting Django server"
+    - python3 manage.py runserver 0.0.0.0:8000
