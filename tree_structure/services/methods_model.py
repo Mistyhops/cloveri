@@ -104,14 +104,15 @@ def create_node(data: dict):
 def change_value_fields(data: dict, pk: int):
     """Метод изменения значений полей 'attributes' и 'inner_order'
     """
-    serializer = UpdateNodeSerializer(data=data)
-    serializer.is_valid(raise_exception=True)
 
     # добавляем в валидатор разрешенные поля
     fields_allowed = ['attributes',]
     kwargs = {'pk': pk}
     validate = Validate(data, *fields_allowed, **kwargs)
     validate.validate_fields_required()
+
+    serializer = UpdateNodeSerializer(data=data)
+    serializer.is_valid(raise_exception=True)
 
     # получаем 2 объекта. Первый - у которого меняем значения полей
     # Второй объект нужен, чтобы присвоить его полю inner_order значение поля inner_order первого объекта
