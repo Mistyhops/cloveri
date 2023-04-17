@@ -7,7 +7,7 @@ stop_server:
         stage: stop_server
         script:
                 - echo "Stopping Django server"
-                - pkill -f 'python manage.py runserver'
+                - ps aux | grep '[p]ython manage.py runserver' | awk '{print $2}' | xargs kill
 
 pull_code:
         stage: pull_code
