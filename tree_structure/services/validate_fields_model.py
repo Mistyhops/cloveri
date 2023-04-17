@@ -139,7 +139,9 @@ class Validate:
         if attributes:
             if isinstance(attributes, str):
                 try:
-                    json.loads(attributes)
+                    attr_dict = json.loads(attributes)
+                    if not isinstance(attr_dict, dict):
+                        errors.append('attributes has wrong format, must be json')
                 except json.decoder.JSONDecodeError:
                     errors.append('attributes has wrong format, must be json')
             else:
