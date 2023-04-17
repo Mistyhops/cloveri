@@ -60,7 +60,7 @@ class NodeApiView(APIView):
 
         pk = kwargs.get('pk')
         if not pk:
-            return Response({'error': 'pk can\'t be None'})
+            return Response({'error': 'pk can\'t be None'}, status=status.HTTP_400_BAD_REQUEST)
 
         result = methods_model.delete_node(request.data, pk)
         return Response({'detail': result}, status=status.HTTP_200_OK)
@@ -98,7 +98,7 @@ class RestoreNodeApiView(APIView):
 
         pk = kwargs.get('pk')
         if not pk:
-            return Response({'error': 'pk can\'t be None'})
+            return Response({'error': 'pk can\'t be None'}, status=status.HTTP_400_BAD_REQUEST)
 
         result = methods_model.restore_node(request.data, pk)
         return Response({'node': result}, status=status.HTTP_200_OK)

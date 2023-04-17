@@ -136,11 +136,11 @@ def change_value_fields(data: dict, pk: int):
 def delete_node(data: dict, pk: int):
     """Метод скрытия узла, установки параметра hidden=True"""
 
-    serializer = UpdateNodeSerializer(data=data)
-    serializer.is_valid(raise_exception=True)
-
     validate = Validate(data)
     validate.validate_fields_required()
+
+    serializer = UpdateNodeSerializer(data=data)
+    serializer.is_valid(raise_exception=True)
 
     try:
         with transaction.atomic():
@@ -165,11 +165,11 @@ def delete_node(data: dict, pk: int):
 def restore_node(data: dict, pk: int):
     """Метод скрытия узла, установки параметра hidden=True"""
 
-    serializer = UpdateNodeSerializer(data=data)
-    serializer.is_valid(raise_exception=True)
-
     validate = Validate(data)
     validate.validate_fields_required()
+
+    serializer = UpdateNodeSerializer(data=data)
+    serializer.is_valid(raise_exception=True)
 
     try:
         with transaction.atomic():
