@@ -9,14 +9,21 @@ class NodeApiView(APIView):
 
     # v1/node/<int:pk>/
     def get(self, request, **kwargs):
-        """Получить узел по id(pk)"""
+        """
+        Получить узел по id(pk)
+        :param request: в параметрах get запроса принимает следующие параметры:
+        project_id: uuid проекта, обязательный параметр
+        item_type: обязательный параметр
+        item: обязательный параметр
+        :return: объект
+        """
 
         pk = kwargs.get("pk", None)
         if not pk:
             return Response({'error': 'pk cannot be null'}, status=status.HTTP_400_BAD_REQUEST)
 
         result = methods_model.get_node(request.GET, pk)
-        return Response({'node': result}, status=status.HTTP_200_OK)
+        return Response(result, status=status.HTTP_200_OK)
 
     # v1/node/
     def post(self, request):
@@ -34,7 +41,7 @@ class NodeApiView(APIView):
         """
 
         result = methods_model.create_node(request.data)
-        return Response({'node': result}, status=status.HTTP_201_CREATED)
+        return Response(result, status=status.HTTP_201_CREATED)
 
     # v1/node/<int:pk>/
     def put(self, request, **kwargs):
@@ -45,7 +52,7 @@ class NodeApiView(APIView):
             return Response({'error': 'pk cannot be null'}, status=status.HTTP_400_BAD_REQUEST)
 
         result = methods_model.change_value_fields(request.data, pk)
-        return Response({'node': result}, status=status.HTTP_201_CREATED)
+        return Response(result, status=status.HTTP_201_CREATED)
 
     # v1/node/<int:pk>/
     def delete(self, request, **kwargs):
@@ -63,24 +70,30 @@ class NodeApiView(APIView):
             return Response({'error': 'pk can\'t be None'}, status=status.HTTP_400_BAD_REQUEST)
 
         result = methods_model.delete_node(request.data, pk)
-        return Response({'detail': result}, status=status.HTTP_200_OK)
+        return Response(result, status=status.HTTP_200_OK)
 
 
 class NodesApiView(APIView):
 
     # v1/nodes/
     def get(self, request, **kwargs):
-        """Получить потомков узла, если передан id(pk), иначе получить дерево узлов
+        """
+        Получить потомков узла, если в url передан id(pk), иначе получить дерево узлов
         по 'project_id' 'item_type' 'item'
+        :param request: в параметрах get запроса принимает следующие параметры:
+        project_id: uuid проекта, обязательный параметр
+        item_type: обязательный параметр
+        item: обязательный параметр
+        :return: список объектов
         """
 
         pk = kwargs.get("pk", None)
         if not pk:
             result = methods_model.get_tree(request.GET)
-            return Response({'nodes': result}, status=status.HTTP_200_OK)
+            return Response(result, status=status.HTTP_200_OK)
 
         result = methods_model.get_children(request.GET, pk)
-        return Response({'nodes': result}, status=status.HTTP_200_OK)
+        return Response(result, status=status.HTTP_200_OK)
 
 
 class RestoreNodeApiView(APIView):
@@ -101,4 +114,4 @@ class RestoreNodeApiView(APIView):
             return Response({'error': 'pk can\'t be None'}, status=status.HTTP_400_BAD_REQUEST)
 
         result = methods_model.restore_node(request.data, pk)
-        return Response({'node': result}, status=status.HTTP_200_OK)
+        return Response(result, status=status.HTTP_200_OK)
