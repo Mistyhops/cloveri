@@ -1,22 +1,12 @@
 stages:
-        - stop_server
-        - pull_code
-        - start_server
+  - build
 
-stop_server:
-        stage: stop_server
-        script:
-                - echo "Stopping Django server"
-                - sudo killall -9 python3
-
-pull_code:
-        stage: pull_code
-        script:
-                - echo "Pulling latest code from GitLab"
-                - git pull origin develop
-
-start_server:
-        stage: start_server
-        script:
-                - echo "Starting Django server"
-                - python3 manage.py runserver 0.0.0.0:8000
+build:
+  image: python:3.8.10
+  stage: build
+  before_script:
+    - pip install --upgrade pip
+    - pip install -r requirements.txt
+  script:
+    - python manage.py collectstatic --noinput
+    - python manage.py migrate --noinput
