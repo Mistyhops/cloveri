@@ -28,3 +28,14 @@ class UpdateNodeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Node
         fields = ('id', 'path', 'project_id', 'item_type', 'item', 'inner_order', 'attributes', 'level_node')
+
+
+class DeleteNodeSerializer(serializers.ModelSerializer):
+    path = serializers.CharField(read_only=True)
+    inner_order = serializers.CharField(read_only=True)
+    attributes = serializers.JSONField(read_only=True)
+    level_node = serializers.IntegerField(source='get_level_node', read_only=True)
+
+    class Meta:
+        model = Node
+        fields = ('id', 'path', 'project_id', 'item_type', 'item', 'inner_order', 'attributes', 'level_node', 'hidden')

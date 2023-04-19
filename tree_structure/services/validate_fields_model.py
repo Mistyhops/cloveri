@@ -147,4 +147,8 @@ class Validate:
             else:
                 errors.append('attributes has wrong format, must be json')
 
+        hidden = self.request_data.get('hidden')
+        if hidden is not None and hidden is not True:
+            errors.append('hidden can be None or True')
+
         return errors

@@ -54,24 +54,6 @@ class NodeApiView(APIView):
         result = methods_model.change_value_fields(request.data, pk)
         return Response(result, status=status.HTTP_201_CREATED)
 
-    # v1/node/<int:pk>/
-    def delete(self, request, **kwargs):
-        """
-        Скрыть узел. Установить поле hidden=True
-        :param request: в теле запроса принимает следующие параметры:
-        project_id: uuid проекта, обязательный параметр
-        item_type: обязательный параметр
-        item: обязательный параметр
-        :return: строку с результатом
-        """
-
-        pk = kwargs.get('pk')
-        if not pk:
-            return Response({'error': 'pk can\'t be None'}, status=status.HTTP_400_BAD_REQUEST)
-
-        result = methods_model.delete_node(request.data, pk)
-        return Response(result, status=status.HTTP_200_OK)
-
 
 class NodesApiView(APIView):
 
@@ -96,22 +78,20 @@ class NodesApiView(APIView):
         return Response(result, status=status.HTTP_200_OK)
 
 
-class RestoreNodeApiView(APIView):
+class DeleteRestoreNodeApiView(APIView):
 
-    # v1/node/<int:pk>/restore/
+    # v1/node/<int:pk>/hidden/
     def put(self, request, **kwargs):
         """
-        Восстановить узел. Установить поле hidden=None
+        Скрыть или восстановить узел (установить поле hidden)
         :param request: в теле запроса принимает следующие параметры:
         project_id: uuid проекта, обязательный параметр
         item_type: обязательный параметр
         item: обязательный параметр
-        :return: восстановленный объект
+        hidden: обязательный параметр, принимает возможные значения True или None (для удаления необходимо передать
+        True, для восстановления - None)
+        :return: при восстановлении - восстановленный объект, при удалении - строка с результатом
         """
 
-        pk = kwargs.get('pk')
-        if not pk:
-            return Response({'error': 'pk can\'t be None'}, status=status.HTTP_400_BAD_REQUEST)
-
-        result = methods_model.restore_node(request.data, pk)
+        result = methods_model.change_hidden_attr_node(request.data, kwargs.get('pk'))
         return Response(result, status=status.HTTP_200_OK)

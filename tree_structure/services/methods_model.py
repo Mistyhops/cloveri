@@ -2,7 +2,7 @@ from django.db import transaction, DatabaseError
 from rest_framework.exceptions import ValidationError, NotFound
 
 from ..models import Node
-from ..serializers import NodeSerializer, NewNodeSerializer, UpdateNodeSerializer
+from ..serializers import NodeSerializer, NewNodeSerializer, UpdateNodeSerializer, DeleteNodeSerializer
 from .validate_fields_model import Validate
 
 
@@ -106,7 +106,7 @@ def change_value_fields(data: dict, pk: int):
     """
 
     # добавляем в валидатор разрешенные поля
-    fields_allowed = ['attributes',]
+    fields_allowed = ['attributes', ]
     kwargs = {'pk': pk}
     validate = Validate(data, *fields_allowed, **kwargs)
     validate.validate_fields_required()
@@ -134,13 +134,20 @@ def change_value_fields(data: dict, pk: int):
     return NewNodeSerializer(instances[0]).data
 
 
-def delete_node(data: dict, pk: int):
-    """Метод скрытия узла, установки параметра hidden=True"""
+def change_hidden_attr_node(data: dict, pk: int):
+    if not pk:
+        raise ValidationError({'error': 'pk can\'t be None'})
 
-    validate = Validate(data)
+    try:
+        hidden = data['hidden']
+    except KeyError:
+        raise ValidationError({'error': 'hidden field is required'})
+
+    fields_allowed = ['hidden', ]
+    validate = Validate(data, *fields_allowed)
     validate.validate_fields_required()
 
-    serializer = UpdateNodeSerializer(data=data)
+    serializer = DeleteNodeSerializer(data=data)
     serializer.is_valid(raise_exception=True)
 
     try:
@@ -149,45 +156,21 @@ def delete_node(data: dict, pk: int):
                 id=pk,
                 project_id=data['project_id'],
                 item_type=data['item_type'],
-                item=data['item'],
-            ).exclude(hidden=True).first()
-
-            if not instance:
-                raise NotFound('Object not found')
-
-            instance.hidden = True
-            instance.save()
-    except DatabaseError as e:
-        raise ValidationError({'error': e})
-
-    return 'Node deleted'
-
-
-def restore_node(data: dict, pk: int):
-    """Метод скрытия узла, установки параметра hidden=True"""
-
-    validate = Validate(data)
-    validate.validate_fields_required()
-
-    serializer = UpdateNodeSerializer(data=data)
-    serializer.is_valid(raise_exception=True)
-
-    try:
-        with transaction.atomic():
-            instance = Node.objects.select_for_update().filter(
-                id=pk,
-                project_id=data['project_id'],
-                item_type=data['item_type'],
-                item=data['item'],
-                hidden=True,
+                item=data['item']
             ).first()
 
             if not instance:
                 raise NotFound('Object not found')
 
-            instance.hidden = None
-            instance.save()
+            if instance.hidden == hidden:
+                raise ValidationError({'error': f'hidden is already set to {instance.hidden}'})
+            else:
+                instance.hidden = hidden
+                instance.save()
     except DatabaseError as e:
         raise ValidationError({'error': e})
 
-    return NewNodeSerializer(instance).data
+    if hidden:
+        return 'Node deleted'
+    else:
+        return DeleteNodeSerializer(instance).data

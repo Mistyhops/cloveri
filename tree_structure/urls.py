@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import NodeApiView, NodesApiView, RestoreNodeApiView
+from .views import NodeApiView, NodesApiView, DeleteRestoreNodeApiView
 
 urlpatterns = [
     # get_tree
@@ -9,8 +9,9 @@ urlpatterns = [
     path('v1/nodes/<int:pk>/', NodesApiView.as_view()),
     # create_node
     path('v1/node/', NodeApiView.as_view()),
-    # get_node, #put_node, #delete_node
+    # get_node
     path('v1/node/<int:pk>/', NodeApiView.as_view()),
-    # restore_node
-    path('v1/node/<int:pk>/restore/', RestoreNodeApiView.as_view()),
+
+    # delete_node, restore_node
+    path('v1/node/<int:pk>/hidden/', DeleteRestoreNodeApiView.as_view()),
 ]
