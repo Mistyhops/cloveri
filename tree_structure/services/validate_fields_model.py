@@ -45,24 +45,25 @@ class Validate:
             raise ValidationError({'errors': errors})
 
     def validate_value_fields_for_create_child(self, parent_id: int) -> object:
-        """Метод сверяет переданные значения project_id, item_type, item со значениями этих полей у родителя"""
+        """
+        Метод сверяет переданные значения project_id, item_type, item со значениями этих полей у родителя,
+        Формирует inner_order и возвращает его, а также возвращает path родителя
+        """
 
-        # если в request_data передан parent_id, значит попытка создать дочерний узел
-        if 'parent_id' in self.request_data:
-            kwargs = {"pk": parent_id}
-            instance = self.get_object_from_model(Node, many=False, **kwargs)
+        kwargs = {"pk": parent_id}
+        instance = self.get_object_from_model(Node, many=False, **kwargs)
 
-            errors = []
-            if str(instance.project_id) != str(self.request_data['project_id']):
-                errors.append(f"Value 'project_id' must match the parent")
-            if str(instance.item_type) != str(self.request_data['item_type']):
-                errors.append(f"Value 'item_type' must match the parent")
-            if str(instance.item) != str(self.request_data['item']):
-                errors.append(f"Value 'item' must match the parent")
-            if errors:
-                raise ValidationError({'errors': errors})
+        errors = []
+        if str(instance.project_id) != str(self.request_data['project_id']):
+            errors.append(f"Value 'project_id' must match the parent")
+        if str(instance.item_type) != str(self.request_data['item_type']):
+            errors.append(f"Value 'item_type' must match the parent")
+        if str(instance.item) != str(self.request_data['item']):
+            errors.append(f"Value 'item' must match the parent")
+        if errors:
+            raise ValidationError(errors)
 
-            return instance
+        return instance
 
     def validation_change_fields(self) -> list:
         """Метод проверяет параметры для смены inner_order или изменение поля attributes.
