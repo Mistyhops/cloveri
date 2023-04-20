@@ -1,4 +1,5 @@
 from django.db import transaction, DatabaseError
+from django.db.models.functions import Length
 from rest_framework.exceptions import ValidationError, NotFound
 
 from ..models import Node
@@ -12,12 +13,14 @@ def get_tree(data: dict) -> dict:
     validate = Validate(data)
     validate.validate_fields_required()
 
-    kwargs = {
-        "project_id": data['project_id'],
-        "item_type": data['item_type'],
-        "item": data['item']
-    }
-    instance = validate.get_object_from_model(Node, many=True, **kwargs)
+    instance = Node.objects.filter(
+        project_id=data['project_id'],
+        item_type=data['item_type'],
+        item=data['item'],
+    ).exclude(hidden=True).order_by('path')
+
+    if not instance:
+        raise NotFound({'error': 'does not exist object(s)'})
 
     result = NodeSerializer(instance, many=True).data
     return result
@@ -66,6 +69,53 @@ def get_children(data: dict, pk: int) -> dict:
     return result
 
 
+def create_root_node(data: dict, path: str) -> object:
+    amount_nodes = Node.objects.filter(
+        project_id=data['project_id'],
+        item_type=data['item_type'],
+        item=data['item'],
+    ).annotate(path_len=Length('path')).filter(path_len__lt=11).count()
+
+    inner_order = (amount_nodes + 1) * 1000
+
+    node_new = Node.objects.create(
+        path=path,
+        project_id=data['project_id'],
+        item_type=data['item_type'],
+        item=data['item'],
+        inner_order=inner_order,
+        attributes=data.get('attributes'),
+    )
+    path = '0' * (10 - len(str(node_new.id))) + str(node_new.id)
+    node_new.path = path
+    node_new.save()
+    return node_new
+
+
+def create_child_node(data: dict, path: str) -> object:
+    amount_nodes = Node.objects.filter(
+        path__startswith=path,
+        project_id=data['project_id'],
+        item_type=data['item_type'],
+        item=data['item'],
+    ).exclude(path=path).count()
+
+    inner_order = (amount_nodes + 1) * 1000
+
+    node_new = Node.objects.create(
+        path=path,
+        project_id=data['project_id'],
+        item_type=data['item_type'],
+        item=data['item'],
+        inner_order=inner_order,
+        attributes=data.get('attributes'),
+    )
+    path = '0' * (10 - len(str(node_new.id))) + str(node_new.id)
+    node_new.path += path
+    node_new.save()
+    return node_new
+
+
 def create_node(data: dict):
     """Метод создания нового узла в модели Node
     Если в теле запроса передается параметр 'parent_id',
@@ -74,7 +124,7 @@ def create_node(data: dict):
     то будет создан корневой узел.
     """
 
-    fields_allowed = ['parent_id', 'attributes', 'inner_order']
+    fields_allowed = ['parent_id', 'attributes']
     validate = Validate(data, *fields_allowed)
     validate.validate_fields_required()
 
@@ -83,21 +133,11 @@ def create_node(data: dict):
 
     if data.get('parent_id'):
         parent_id = data['parent_id']
-        parent = validate.validate_value_fields_for_create_child(parent_id)
-
-        path = parent.path
-        path += '0' * (10 - len(str(parent.id))) + str(parent.id)
+        instance_parent = validate.validate_value_fields_for_create_child(parent_id)
+        node_new = create_child_node(data, instance_parent.path)
     else:
-        path = ""
+        node_new = create_root_node(data, "9999999999")
 
-    node_new = Node.objects.create(
-        path=path,
-        project_id=data['project_id'],
-        item_type=data['item_type'],
-        item=data['item'],
-        inner_order=data.get('inner_order'),
-        attributes=data.get('attributes'),
-    )
     return NewNodeSerializer(node_new).data
 
 
@@ -117,15 +157,6 @@ def change_value_fields(data: dict, pk: int):
     # получаем 2 объекта. Первый - у которого меняем значения полей
     # Второй объект нужен, чтобы присвоить его полю inner_order значение поля inner_order первого объекта
     instances = validate.validation_change_fields()
-
-    # try:
-    #     with transaction.atomic():
-    #         if data.get('inner_order'):
-    #             instances[0].inner_order, instances[1].inner_order = instances[1].inner_order, instances[0].inner_order
-    #             instances[0].save()
-    #             instances[1].save()
-    # except DatabaseError as e:
-    #     raise ValidationError({'error': e})
 
     if data.get('attributes'):
         instances[0].attributes = data.get('attributes')
@@ -173,4 +204,4 @@ def change_hidden_attr_node(data: dict, pk: int):
     if hidden:
         return 'Node deleted'
     else:
-        return DeleteNodeSerializer(instance).data
+        return NewNodeSerializer(instance).data
