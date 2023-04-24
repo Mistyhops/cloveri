@@ -18,11 +18,7 @@ class NodeApiView(APIView):
         :return: объект
         """
 
-        pk = kwargs.get("pk", None)
-        if not pk:
-            return Response({'error': 'pk cannot be null'}, status=status.HTTP_400_BAD_REQUEST)
-
-        result = methods_model.get_node(request.GET, pk)
+        result = methods_model.get_node(request.GET, kwargs.get("pk", None))
         return Response(result, status=status.HTTP_200_OK)
 
     # v1/node/
@@ -41,17 +37,6 @@ class NodeApiView(APIView):
         """
 
         result = methods_model.create_node(request.data)
-        return Response(result, status=status.HTTP_201_CREATED)
-
-    # v1/node/<int:pk>/
-    def put(self, request, **kwargs):
-        """Изменить поля attributes и inner_order в модели Node"""
-
-        pk = kwargs.get("pk", None)
-        if not pk:
-            return Response({'error': 'pk cannot be null'}, status=status.HTTP_400_BAD_REQUEST)
-
-        result = methods_model.change_value_fields(request.data, pk)
         return Response(result, status=status.HTTP_201_CREATED)
 
 
@@ -76,6 +61,25 @@ class NodesApiView(APIView):
 
         result = methods_model.get_children(request.GET, pk)
         return Response(result, status=status.HTTP_200_OK)
+
+
+class ChangeAttributesNodeApiView(APIView):
+    # v1/node/<int:pk>/
+    def put(self, request, **kwargs):
+        """
+        Изменить поле attributes в модели Node
+        :param request:
+         - В параметрах put запроса в url принимает pk.
+         - В парамертах тела запроса:
+        project_id: uuid проекта, обязательный параметр
+        item_type: обязательный параметр
+        item: обязательный параметр
+        attributes: json
+        :return: объект
+        """
+
+        result = methods_model.change_attributes_attr_node(request.data, kwargs.get("pk", None))
+        return Response(result, status=status.HTTP_201_CREATED)
 
 
 class DeleteRestoreNodeApiView(APIView):

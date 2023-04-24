@@ -1,6 +1,7 @@
 from django.db import transaction, DatabaseError
 from django.db.models.functions import Length
 from rest_framework.exceptions import ValidationError, NotFound
+from django.db.models import F
 
 from ..models import Node
 from ..serializers import NodeSerializer, NewNodeSerializer, UpdateNodeSerializer, DeleteNodeSerializer
@@ -29,6 +30,9 @@ def get_tree(data: dict) -> dict:
 def get_node(data: dict, pk: int) -> dict:
     """Метод вывода узла из модели Node"""
 
+    if not pk:
+        raise ValidationError({'error': 'pk can\'t be None'})
+
     validate = Validate(data)
     validate.validate_fields_required()
 
@@ -46,6 +50,10 @@ def get_node(data: dict, pk: int) -> dict:
 
 def get_children(data: dict, pk: int) -> dict:
     """Метод вывода всех дочерних узлов из модели Node"""
+
+    if not pk:
+        raise ValidationError({'error': 'pk can\'t be None'})
+
     validate = Validate(data)
     validate.validate_fields_required()
 
@@ -76,7 +84,7 @@ def create_root_node(data: dict, path: str) -> object:
         item=data['item'],
     ).annotate(path_len=Length('path')).filter(path_len__lt=11).count()
 
-    inner_order = (amount_nodes + 1) * 1000
+    inner_order = amount_nodes + 1
 
     node_new = Node.objects.create(
         path=path,
@@ -100,7 +108,7 @@ def create_child_node(data: dict, path: str) -> object:
         item=data['item'],
     ).exclude(path=path).count()
 
-    inner_order = (amount_nodes + 1) * 1000
+    inner_order = amount_nodes + 1
 
     node_new = Node.objects.create(
         path=path,
@@ -141,11 +149,56 @@ def create_node(data: dict):
     return NewNodeSerializer(node_new).data
 
 
-def change_value_fields(data: dict, pk: int):
-    """Метод изменения значений полей 'attributes' и 'inner_order'
-    """
+def change_inner_order_attr_node(data: dict, pk: int):
+    pass
+    # if not pk:
+    #     raise ValidationError({'error': 'pk can\'t be None'})
+    #
+    # if not data.get('node_id'):
+    #     raise ValidationError({'error': 'node_id param is required.'})
+    #
+    # fields_allowed = ['node_id', ]
+    # kwargs = {'pk': pk}
+    # validate = Validate(data, *fields_allowed, **kwargs)
+    # validate.validate_fields_required()
+    #
+    # serializer = UpdateNodeSerializer(data=data)
+    # serializer.is_valid(raise_exception=True)
+    #
+    # try:
+    #     with transaction.atomic():
+    #         instance = Node.objects.select_for_update().filter(
+    #             id=pk,
+    #             project_id=data['project_id'],
+    #             item_type=data['item_type'],
+    #             item=data['item']
+    #         ).first()
+    #
+    #         if not instance:
+    #             raise NotFound('Object not found')
+    #
+    #         instance.attributes = data.get('attributes')
+    #         instance.save()
+    # except DatabaseError as e:
+    #     raise ValidationError({'error': e})
 
-    # добавляем в валидатор разрешенные поля
+    #
+    # a.update(inner_order=F("inner_order") + 1)
+    #
+    # Node.objects.filter(path__startswith='00000000010', inner_order__gte=3000, inner_order__lte=7000).values('id',
+    #                                                                                                          'path',
+    #                                                                                                          'inner_order')
+
+
+def change_attributes_attr_node(data: dict, pk: int):
+    """    Функция изменения значения поля attributes в модели Node    """
+
+    if not pk:
+        raise ValidationError({'error': 'pk can\'t be None'})
+
+    if not data.get('attributes'):
+        raise ValidationError({'error': 'attributes param is required.'})
+
     fields_allowed = ['attributes', ]
     kwargs = {'pk': pk}
     validate = Validate(data, *fields_allowed, **kwargs)
@@ -154,15 +207,22 @@ def change_value_fields(data: dict, pk: int):
     serializer = UpdateNodeSerializer(data=data)
     serializer.is_valid(raise_exception=True)
 
-    # получаем 2 объекта. Первый - у которого меняем значения полей
-    # Второй объект нужен, чтобы присвоить его полю inner_order значение поля inner_order первого объекта
-    instances = validate.validation_change_fields()
+    try:
+        with transaction.atomic():
+            instance = Node.objects.select_for_update().filter(
+                id=pk,
+                project_id=data['project_id'],
+                item_type=data['item_type'],
+                item=data['item']
+            ).first()
 
-    if data.get('attributes'):
-        instances[0].attributes = data.get('attributes')
-        instances[0].save()
+            if not instance:
+                raise NotFound('Object not found')
 
-    return NewNodeSerializer(instances[0]).data
+            instance.attributes = data.get('attributes')
+            instance.save()
+    except DatabaseError as e:
+        raise ValidationError({'error': e})
 
 
 def change_hidden_attr_node(data: dict, pk: int):

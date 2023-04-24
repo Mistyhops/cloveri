@@ -65,38 +65,38 @@ class Validate:
 
         return instance
 
-    def validation_change_fields(self) -> list:
-        """Метод проверяет параметры для смены inner_order или изменение поля attributes.
-        Учитываем, что запрос на изменение может быть для двух полей одновременно
-        или для какого-то одного поля.
-        """
-
-        # будет содержать узел, с последним по счету inner_order
-        instance_original_inner_order = None
-
-        # Получаем узел, поля которого будем менять (inner_order, attributes)
-        kwargs = {
-            "pk": self.pk,
-            "project_id": self.request_data['project_id'],
-            "item_type": self.request_data['item_type'],
-            "item": self.request_data['item']
-        }
-        instance_change = self.get_object_from_model(Node, many=False, **kwargs)
-
-        # Если в запрос был передан параметр inner_order, то ищем узел с таким inner_order
-        if self.request_data.get('inner_order'):
-            path = instance_change.path
-
-            kwargs = {
-                "path__startswith": path,
-                "project_id": self.request_data['project_id'],
-                "item_type": self.request_data['item_type'],
-                "item": self.request_data['item'],
-                "inner_order": self.request_data.get('inner_order')
-            }
-            instance_original_inner_order = self.get_object_from_model(Node, many=False, **kwargs)
-
-        return instance_change, instance_original_inner_order
+    # def validation_change_fields(self) -> list:
+    #     """Метод проверяет параметры для смены inner_order или изменение поля attributes.
+    #     Учитываем, что запрос на изменение может быть для двух полей одновременно
+    #     или для какого-то одного поля.
+    #     """
+    #
+    #     # будет содержать узел, с последним по счету inner_order
+    #     instance_original_inner_order = None
+    #
+    #     # Получаем узел, поля которого будем менять (inner_order, attributes)
+    #     kwargs = {
+    #         "pk": self.pk,
+    #         "project_id": self.request_data['project_id'],
+    #         "item_type": self.request_data['item_type'],
+    #         "item": self.request_data['item']
+    #     }
+    #     instance_change = self.get_object_from_model(Node, many=False, **kwargs)
+    #
+    #     # Если в запрос был передан параметр inner_order, то ищем узел с таким inner_order
+    #     if self.request_data.get('inner_order'):
+    #         path = instance_change.path
+    #
+    #         kwargs = {
+    #             "path__startswith": path,
+    #             "project_id": self.request_data['project_id'],
+    #             "item_type": self.request_data['item_type'],
+    #             "item": self.request_data['item'],
+    #             "inner_order": self.request_data.get('inner_order')
+    #         }
+    #         instance_original_inner_order = self.get_object_from_model(Node, many=False, **kwargs)
+    #
+    #     return instance_change, instance_original_inner_order
 
     def get_object_from_model(self, model: models.Model, many: bool = False, **kwargs) -> object:
         if many:
