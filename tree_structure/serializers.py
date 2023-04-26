@@ -5,6 +5,7 @@ from .models import Node
 
 class NodeSerializer(serializers.ModelSerializer):
     level_node = serializers.IntegerField(source='get_level_node', read_only=True)
+    # test = serializers.CharField(source='sorted_for_test', read_only=True)
 
     class Meta:
         model = Node
@@ -13,7 +14,7 @@ class NodeSerializer(serializers.ModelSerializer):
 
 class NewNodeSerializer(serializers.ModelSerializer):
     path = serializers.CharField(read_only=True)
-    inner_order = serializers.IntegerField(read_only=True)
+    inner_order = serializers.CharField(read_only=True)
     level_node = serializers.IntegerField(source='get_level_node', read_only=True)
 
     class Meta:

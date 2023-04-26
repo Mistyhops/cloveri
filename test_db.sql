@@ -7,7 +7,7 @@ CREATE TABLE tree_structure_node(
 	project_id		uuid		NOT NULL,
 	item_type		text		NOT NULL,
 	item			text		NOT NULL,
-	inner_order		int8		NOT NULL,
+	inner_order		text		NOT NULL,
 	attributes		jsonb,
 	hidden          bool        DEFAULT NULL,
 

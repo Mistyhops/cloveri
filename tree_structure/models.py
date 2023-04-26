@@ -9,7 +9,7 @@ class Node(models.Model):
     project_id = models.UUIDField()
     item_type = models.TextField()
     item = models.TextField()
-    inner_order = models.BigIntegerField()
+    inner_order = models.TextField()
     attributes = models.JSONField(blank=True, null=True)
     hidden = models.BooleanField(blank=True, null=True)
 
