@@ -133,8 +133,8 @@ class Validate:
             errors.append('parent_id has wrong format, must be int')
 
         inner_order = self.request_data.get('inner_order')
-        if inner_order and not isinstance(inner_order, int):
-            errors.append('inner_order has wrong format, must be int')
+        if inner_order and not isinstance(inner_order, str):
+            errors.append('inner_order has wrong format, must be str')
 
         attributes = self.request_data.get('attributes')
         if attributes:

@@ -9,8 +9,7 @@ https://docs.djangoproject.com/en/4.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
-
-
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -80,19 +79,19 @@ WSGI_APPLICATION = 'start_project.wsgi.application'
 
 
 # Так нужно для того, чтобы у меня на локалке работали настройки БД из моего файла local_settings.py
-# try:
-#     from ..draft.local_settings import *
-# except ImportError:
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'postgres',
-        'USER': 'postgres',
-        'PASSWORD': '1',
-        'HOST': '127.0.0.1',
-        'PORT': '5432',
+try:
+    from draft.local_settings import *
+except ImportError:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'NAME': os.environ.get('DB_NAME'),
+            'USER': os.environ.get('DB_USER'),
+            'PASSWORD': os.environ.get('DB_PASSWD'),
+            'HOST': os.environ.get('DB_HOST', '127.0.0.1'),
+            'PORT': 5432
+        }
     }
-}
 
 
 

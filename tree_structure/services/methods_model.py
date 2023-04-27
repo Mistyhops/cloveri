@@ -65,7 +65,7 @@ def get_children(data: dict, pk: int) -> dict:
     path += '0' * (10 - len(str(instance.id))) + str(instance.id)
 
     kwargs = {
-        "path__startswith": path,
+        "path__startswith": path[:-10],
         "project_id": data['project_id'],
         "item_type": data['item_type'],
         "item": data['item']
