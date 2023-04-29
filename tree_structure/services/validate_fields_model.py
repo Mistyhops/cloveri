@@ -60,43 +60,13 @@ class Validate:
             errors.append(f"Value 'item_type' must match the parent")
         if str(instance.item) != str(self.request_data['item']):
             errors.append(f"Value 'item' must match the parent")
+        if len(instance.path) % 10 != 0:
+            errors.append({'error': f'For object id {instance.id} value field "path" not a multiple of 10. '
+                                    f'Field "path" generation error.'})
         if errors:
             raise ValidationError(errors)
 
         return instance
-
-    # def validation_change_fields(self) -> list:
-    #     """Метод проверяет параметры для смены inner_order или изменение поля attributes.
-    #     Учитываем, что запрос на изменение может быть для двух полей одновременно
-    #     или для какого-то одного поля.
-    #     """
-    #
-    #     # будет содержать узел, с последним по счету inner_order
-    #     instance_original_inner_order = None
-    #
-    #     # Получаем узел, поля которого будем менять (inner_order, attributes)
-    #     kwargs = {
-    #         "pk": self.pk,
-    #         "project_id": self.request_data['project_id'],
-    #         "item_type": self.request_data['item_type'],
-    #         "item": self.request_data['item']
-    #     }
-    #     instance_change = self.get_object_from_model(Node, many=False, **kwargs)
-    #
-    #     # Если в запрос был передан параметр inner_order, то ищем узел с таким inner_order
-    #     if self.request_data.get('inner_order'):
-    #         path = instance_change.path
-    #
-    #         kwargs = {
-    #             "path__startswith": path,
-    #             "project_id": self.request_data['project_id'],
-    #             "item_type": self.request_data['item_type'],
-    #             "item": self.request_data['item'],
-    #             "inner_order": self.request_data.get('inner_order')
-    #         }
-    #         instance_original_inner_order = self.get_object_from_model(Node, many=False, **kwargs)
-    #
-    #     return instance_change, instance_original_inner_order
 
     def get_object_from_model(self, model: models.Model, many: bool = False, **kwargs) -> object:
         if many:
@@ -105,7 +75,7 @@ class Validate:
             instance = model.objects.filter(**kwargs).exclude(hidden=True).first()
 
         if not instance:
-            raise NotFound({'error': 'does not exist object(s)'})
+            raise NotFound({'detail': 'Does not exist object(s)'})
 
         return instance
 
@@ -151,5 +121,9 @@ class Validate:
         hidden = self.request_data.get('hidden')
         if hidden is not None and hidden is not True:
             errors.append('hidden can be None or True')
+
+        destination_node_id = self.request_data.get('destination_node_id')
+        if destination_node_id and not isinstance(destination_node_id, int):
+            errors.append('destination_node_id has wrong format, must be int')
 
         return errors

@@ -90,7 +90,7 @@ class ChangeAttributesNodeApiView(APIView):
 
 class ChangeInnerOrderNodeApiView(APIView):
 
-    # v1/node/<int:pk>/
+    # v1/node/<int:pk>/order
     def put(self, request, **kwargs):
         """
         Изменить поле inner_order в модели Node
@@ -100,8 +100,8 @@ class ChangeInnerOrderNodeApiView(APIView):
         project_id: uuid проекта, обязательный параметр
         item_type: обязательный параметр
         item: обязательный параметр
-        node_id: id узла, на место которого ставим
-        :return: объект
+        destination_node_id: id узла, на место которого ставим
+        :return: сообщение
         """
         result = methods_model.change_inner_order_attr_node(request.data, kwargs.get("pk", None))
         return Response(result, status=status.HTTP_201_CREATED)

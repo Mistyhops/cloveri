@@ -20,6 +20,9 @@ class Node(models.Model):
             raise ValidationError(f"For object id {self.id} value field 'path' not a multiple of 10. "
                                   f"Field 'path' generation error.")
 
+    def __str__(self):
+        return f'{self.id}'
+
     class Meta:
         db_table = 'tree_structure_node'
         unique_together = (('path', 'id'), ('id', 'project_id', 'item_type', 'item'),)

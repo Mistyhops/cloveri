@@ -20,7 +20,7 @@ urlpatterns = [
     path('v1/node/<int:pk>/attributes/', ChangeAttributesNodeApiView.as_view()),
 
     # put inner_order
-    # path('v1/node/<int:pk>/order/', ChangeInnerOrderNodeApiView.as_view()),
+    path('v1/node/<int:pk>/order/', ChangeInnerOrderNodeApiView.as_view()),
 
     # delete_node, restore_node
     path('v1/node/<int:pk>/hidden/', DeleteRestoreNodeApiView.as_view()),
