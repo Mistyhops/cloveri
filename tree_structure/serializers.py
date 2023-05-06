@@ -5,7 +5,6 @@ from .models import Node
 
 class NodeSerializer(serializers.ModelSerializer):
     level_node = serializers.IntegerField(source='get_level_node', read_only=True)
-    # test = serializers.CharField(source='sorted_for_test', read_only=True)
 
     class Meta:
         model = Node
@@ -33,6 +32,7 @@ class UpdateNodeSerializer(serializers.ModelSerializer):
 
 
 class DeleteNodeSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Node
         fields = ('project_id', 'item_type', 'item', 'hidden')

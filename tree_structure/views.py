@@ -1,5 +1,3 @@
-from operator import itemgetter
-
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -60,9 +58,6 @@ class NodesApiView(APIView):
         if not pk:
             result = methods_model.get_tree(request.GET)
 
-            # print(ss, 'sdfsdfsdfsdfsdfs')
-            # sorted(result, key=lambda x: x[2])
-            # ss = sorted(result, key=itemgetter('test'))
             return Response(result, status=status.HTTP_200_OK)
 
         result = methods_model.get_children(request.GET, pk)
@@ -70,7 +65,8 @@ class NodesApiView(APIView):
 
 
 class ChangeAttributesNodeApiView(APIView):
-    # v1/node/<int:pk>/
+
+    # v1/node/<int:pk>/attributes/
     def put(self, request, **kwargs):
         """
         Изменить поле attributes в модели Node
@@ -90,20 +86,20 @@ class ChangeAttributesNodeApiView(APIView):
 
 class ChangeInnerOrderNodeApiView(APIView):
 
-    # v1/node/<int:pk>/order
+    # v1/node/<int:pk>/order/
     def put(self, request, **kwargs):
         """
         Изменить поле inner_order в модели Node
         :param request:
          - В параметрах put запроса в url принимает pk.
-         - В парамертах тела запроса:
+         - В параметрах тела запроса:
         project_id: uuid проекта, обязательный параметр
         item_type: обязательный параметр
         item: обязательный параметр
         destination_node_id: id узла, на место которого ставим
         :return: сообщение
         """
-        result = methods_model.change_inner_order_attr_node(request.data, kwargs.get("pk"), kwargs.get("destination_node_id"))
+        result = methods_model.change_inner_order_attr_node(request.data, kwargs.get("pk"))
         return Response(result, status=status.HTTP_201_CREATED)
 
 
