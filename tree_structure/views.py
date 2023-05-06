@@ -103,7 +103,7 @@ class ChangeInnerOrderNodeApiView(APIView):
         destination_node_id: id узла, на место которого ставим
         :return: сообщение
         """
-        result = methods_model.change_inner_order_attr_node(request.data, kwargs.get("pk", None))
+        result = methods_model.change_inner_order_attr_node(request.data, kwargs.get("pk"), kwargs.get("destination_node_id"))
         return Response(result, status=status.HTTP_201_CREATED)
 
 

@@ -1,5 +1,5 @@
-from django.db import transaction, DatabaseError
-from django.db.models import F
+from django.db import transaction, DatabaseError, connection
+
 from django.db.models.functions import Length
 from rest_framework.exceptions import ValidationError, NotFound
 
@@ -154,7 +154,7 @@ def create_node(data: dict):
     return NewNodeSerializer(node_new).data
 
 
-def change_inner_order_attr_node(data: dict, pk: int):
+def change_inner_order_attr_node(data: dict, pk: int, destination_node_id: int = None):
     """    функция смены inner_order    """
 
     if not pk:
@@ -171,7 +171,6 @@ def change_inner_order_attr_node(data: dict, pk: int):
     if pk == int(data.get("destination_node_id")):
         raise ValidationError({'error': 'must not be equal destination_node_id'})
 
-    """
     try:
         with transaction.atomic():
             # получаем узел который двигаем
@@ -183,25 +182,15 @@ def change_inner_order_attr_node(data: dict, pk: int):
             }
             movable_instance = validate.get_object_from_model(Node, many=False, **kwargs)
 
-            # получаем узел который двигаем и его детей
-            movable_instances = Node.objects.select_for_update().filter(
-                inner_order__startswith=movable_instance.inner_order,
-                project_id=data['project_id'],
-                item_type=data['item_type'],
-                item=data['item']
-            ).order_by("inner_order")[1:]
+            if not movable_instance:
+                raise NotFound(f'Object with id{pk} not found')
 
-            # узел, на место которого двигаем узел movable_instance
-            # берем его без блокировки, чтобы узлань его inner_order
             destination_instance = Node.objects.select_for_update().filter(
                 id=data.get('destination_node_id'),
                 project_id=data['project_id'],
                 item_type=data['item_type'],
                 item=data['item']
             ).first()
-
-            if not movable_instance:
-                raise NotFound(f'Object with id{pk} not found')
 
             if not destination_instance:
                 raise NotFound(f'Object with id{data.get("destination_node_id")} not found')
@@ -210,44 +199,49 @@ def change_inner_order_attr_node(data: dict, pk: int):
                 raise ValidationError(
                     f'Object id{data.get("destination_node_id")} does not belong to the parent of object id{pk}')
 
-            # пересчитываем inner_order для узла и его детей, которые двигаем
-            movable_instance.inner_order = destination_instance.inner_order
-            movable_instance.save()
-            movable_instances.update(inner_order=movable_instance.inner_order + F("inner_order")[len(movable_instance.inner_order):])
-            movable_instances.save()
+            # если двигаем узел вниз
+            if int(movable_instance.inner_order[-10:]) < int(destination_instance.inner_order[-10:]):
+                parent_path = destination_instance.path[:-10]
 
-            # print('1    ==============================            =======================         ===============')
+                with connection.cursor() as cursor:
+                    sql = f"UPDATE tree_structure_node \
+                            SET inner_order = LEFT(inner_order, {len(destination_instance.inner_order)} - \
+                                LENGTH(CAST(CAST(SUBSTR(inner_order, {len(destination_instance.inner_order) - 9}, 10) AS INTEGER) - 1 AS TEXT)))|| \
+                                CAST(CAST(SUBSTR(inner_order, {len(destination_instance.inner_order) - 9}, 10) AS INTEGER) - 1 AS TEXT)|| \
+                                RIGHT(inner_order, -{len(destination_instance.inner_order)}) \
+                            WHERE path LIKE '{parent_path}%' \
+                                AND path != '{parent_path}'  \
+                                AND inner_order BETWEEN '{movable_instance.inner_order}' AND '{destination_instance.inner_order}' \
+                                OR inner_order LIKE '{destination_instance.inner_order}%'; \
+                            UPDATE tree_structure_node \
+                                SET inner_order = '{destination_instance.inner_order}'||RIGHT(inner_order, -LENGTH('{movable_instance.inner_order}')) \
+                                WHERE path LIKE '{movable_instance.path}%';"
 
-            # [-10:] берем 10 последних символов и преобразуем в int чтобы убрать лишние нули
-            # если двигаем узел наверх
-            if int(movable_instance.inner_order[-10:]) > int(destination_instance.inner_order[-10:]):
-                other_instance = Node.objects.select_for_update().filter(
-                    inner_order__startswith=movable_instances[0].inner_order[:-10],
-                    project_id=data['project_id'],
-                    item_type=data['item_type'],
-                    item=data['item']
-                ).exclude(id=movable_instances[0].id).order_by('inner_order')[1:]
+                    cursor.execute(sql)
 
+            # если двигаем узел вверх
+            elif int(movable_instance.inner_order[-10:]) > int(destination_instance.inner_order[-10:]):
 
-                # for item in instance_all:
-                #     item.inner_order = _inner_order[-10:] + ('0' * (10 - len(str(_inner_order[-10:]))) + str(node_new.id))
-                # instance_all.save()
-                #
-                # instance_new.inner_order = _inner_order
-                # instance_new.save()
+                parent_path = destination_instance.path[:-10]
 
-                # instance_all.update(inner_order=int(F("inner_order")[-10:]) + 1)
+                with connection.cursor() as cursor:
+                    sql = f"UPDATE tree_structure_node \
+                            SET inner_order = LEFT(inner_order, {len(destination_instance.inner_order)} - \
+                                LENGTH(CAST(CAST(SUBSTR(inner_order, {len(destination_instance.inner_order) - 9}, 10) AS INTEGER) + 1 AS TEXT)))|| \
+                                CAST(CAST(SUBSTR(inner_order, {len(destination_instance.inner_order) - 9}, 10) AS INTEGER) + 1 AS TEXT)|| \
+                                RIGHT(inner_order, -{len(destination_instance.inner_order)}) \
+                            WHERE path LIKE '{parent_path}%' \
+                                AND path != '{parent_path}'  \
+                                AND inner_order BETWEEN '{destination_instance.inner_order}' AND '{movable_instance.inner_order}' \
+                                OR inner_order LIKE '{destination_instance.inner_order}%'; \
+                            UPDATE tree_structure_node \
+                                SET inner_order = '{destination_instance.inner_order}'||RIGHT(inner_order, -LENGTH('{movable_instance.inner_order}')) \
+                                WHERE path LIKE '{movable_instance.path}%';"
 
+                    cursor.execute(sql)
 
     except DatabaseError as e:
         raise ValidationError({'error': e})
-
-    # a.update(inner_order=F("inner_order") + 1)
-    #
-    # Node.objects.filter(path__startswith='00000000010', inner_order__gte=3000, inner_order__lte=7000).values('id',
-    #                                                                                                          'path',
-    #                                                                                                          'inner_order')
-    # return UpdateNodeSerializer(instance_new).data"""
 
 
 def change_attributes_attr_node(data: dict, pk: int):
@@ -280,7 +274,7 @@ def change_attributes_attr_node(data: dict, pk: int):
                 raise NotFound('Object not found')
 
             instance.attributes = data.get('attributes')
-            instance.save()
+            instance.save(update_fields=['attributes'])
     except DatabaseError as e:
         raise ValidationError({'error': e})
 
