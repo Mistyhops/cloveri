@@ -4,7 +4,8 @@ from .views import NodeApiView, \
     NodesApiView, \
     DeleteRestoreNodeApiView, \
     ChangeAttributesNodeApiView, \
-    ChangeInnerOrderNodeApiView
+    ChangeInnerOrderNodeApiView, \
+    ChangeParentNodeApiView
 
 urlpatterns = [
     # get_tree
@@ -24,4 +25,7 @@ urlpatterns = [
 
     # delete_node, restore_node
     path('v1/node/<int:pk>/hidden/', DeleteRestoreNodeApiView.as_view()),
+
+    # change_parent
+    path('v1/node/<int:pk>/parent/', ChangeParentNodeApiView.as_view()),
 ]

@@ -32,7 +32,6 @@ class UpdateNodeSerializer(serializers.ModelSerializer):
 
 
 class DeleteNodeSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Node
         fields = ('project_id', 'item_type', 'item', 'hidden')

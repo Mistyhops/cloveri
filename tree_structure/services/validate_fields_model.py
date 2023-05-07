@@ -126,4 +126,8 @@ class Validate:
         if destination_node_id and not isinstance(destination_node_id, int):
             errors.append('destination_node_id has wrong format, must be int')
 
+        new_parent_id = self.request_data.get('new_parent_id')
+        if new_parent_id and not isinstance(new_parent_id, int):
+            errors.append('new_parent_id has wrong format, must be int')
+
         return errors

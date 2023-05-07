@@ -120,3 +120,20 @@ class DeleteRestoreNodeApiView(APIView):
 
         result = methods_model.change_hidden_attr_node(request.data, kwargs.get('pk'))
         return Response(result, status=status.HTTP_200_OK)
+
+
+class ChangeParentNodeApiView(APIView):
+
+    # v1/node/<int:pk>/parent/
+    def put(self, request, **kwargs):
+        """
+        Переместить узел к другому родителю. Все потомки перемещаемого узла перемещаются вместе с ним.
+        :param request: в теле запроса принимает следующие параметры:
+        new_parent_id: id нового родителя, обязательный параметр
+        project_id: uuid проекта, обязательный параметр
+        item_type: обязательный параметр
+        item: обязательный параметр
+        :return: перемещаемый объект
+        """
+        result = methods_model.change_parent_node(request.data, kwargs.get('pk'))
+        return Response(result, status=status.HTTP_201_CREATED)
