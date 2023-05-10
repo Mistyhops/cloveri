@@ -21,7 +21,11 @@ def get_tree(data: dict) -> dict:
     ).exclude(hidden=True).order_by('inner_order')
 
     if not instance:
-        raise NotFound({'detail': 'Does not exist object(s)'})
+        test = {'detail': 'Does not exist object(s)'}
+        l = []
+        l.append(test)
+        raise NotFound(l)
+        # raise NotFound({'detail': 'Does not exist object(s)'})
 
     result = NodeSerializer(instance, many=True).data
     return result
@@ -78,53 +82,66 @@ def get_children(data: dict, pk: int) -> dict:
 
 
 def create_root_node(data: dict, path: str) -> object:
-    amount_nodes = Node.objects.filter(
-        project_id=data['project_id'],
-        item_type=data['item_type'],
-        item=data['item'],
-    ).annotate(path_len=Length('path')).filter(path_len__lt=11).count()
+    try:
+        with transaction.atomic():
+            amount_nodes = Node.objects.select_for_update().filter(
+                project_id=data['project_id'],
+                item_type=data['item_type'],
+                item=data['item'],
+            ).annotate(path_len=Length('path')).filter(path_len__lt=11).count()
 
-    inner_order = '0' * (10 - len(str(amount_nodes + 1))) + str(amount_nodes + 1)
+            inner_order = '0' * (10 - len(str(amount_nodes + 1))) + str(amount_nodes + 1)
 
-    node_new = Node.objects.create(
-        path=path,
-        project_id=data['project_id'],
-        item_type=data['item_type'],
-        item=data['item'],
-        inner_order=inner_order,
-        attributes=data.get('attributes'),
-    )
-    path = '0' * (10 - len(str(node_new.id))) + str(node_new.id)
-    node_new.path = path
-    node_new.save()
+            node_new = Node.objects.create(
+                path=path,
+                project_id=data['project_id'],
+                item_type=data['item_type'],
+                item=data['item'],
+                inner_order=inner_order,
+                attributes=data.get('attributes'),
+            )
+
+            path = '0' * (10 - len(str(node_new.id))) + str(node_new.id)
+            node_new.path = path
+            node_new.save()
+
+    except DatabaseError as e:
+        raise ValidationError({'error': e})
+
     return node_new
 
 
 def create_child_node(data: dict, path: str, parent_inner_order: str) -> object:
-    amount_nodes = Node.objects.filter(
-        path__startswith=path,
-        project_id=data['project_id'],
-        item_type=data['item_type'],
-        item=data['item'],
-    ) \
-        .annotate(path_len=Length('path')) \
-        .exclude(path=path) \
-        .filter(path_len__lt=len(path) + 11) \
-        .count()
+    try:
+        with transaction.atomic():
+            amount_nodes = Node.objects.select_for_update().filter(
+                path__startswith=path,
+                project_id=data['project_id'],
+                item_type=data['item_type'],
+                item=data['item'],
+            ) \
+                .annotate(path_len=Length('path')) \
+                .exclude(path=path) \
+                .filter(path_len__lt=len(path) + 11) \
+                .count()
 
-    inner_order = parent_inner_order + ('0' * (10 - len(str(amount_nodes + 1))) + str(amount_nodes + 1))
+            inner_order = parent_inner_order + ('0' * (10 - len(str(amount_nodes + 1))) + str(amount_nodes + 1))
 
-    node_new = Node.objects.create(
-        path=path,
-        project_id=data['project_id'],
-        item_type=data['item_type'],
-        item=data['item'],
-        inner_order=inner_order,
-        attributes=data.get('attributes'),
-    )
-    path = '0' * (10 - len(str(node_new.id))) + str(node_new.id)
-    node_new.path += path
-    node_new.save()
+            node_new = Node.objects.create(
+                path=path,
+                project_id=data['project_id'],
+                item_type=data['item_type'],
+                item=data['item'],
+                inner_order=inner_order,
+                attributes=data.get('attributes'),
+            )
+
+            path = '0' * (10 - len(str(node_new.id))) + str(node_new.id)
+            node_new.path += path
+            node_new.save()
+    except DatabaseError as e:
+        raise ValidationError({'error': e})
+
     return node_new
 
 

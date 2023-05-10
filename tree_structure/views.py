@@ -35,7 +35,7 @@ class NodeApiView(APIView):
         при несоответствии возвращает ответ 400
         :return: при успешном выполнении запроса возвращает созданный объект, в ином случае - ошибку
         """
-
+        print(request.data, request.data.get('parent_id'), type(request.data.get('parent_id')), sep='\n')
         result = methods_model.create_node(request.data)
         return Response(result, status=status.HTTP_201_CREATED)
 
@@ -117,7 +117,7 @@ class DeleteRestoreNodeApiView(APIView):
         True, для восстановления - None)
         :return: при восстановлении - восстановленный объект, при удалении - строка с результатом
         """
-
+        print(request.data, request.data.get('hidden'), type(request.data.get('hidden')), sep='\n')
         result = methods_model.change_hidden_attr_node(request.data, kwargs.get('pk'))
         return Response(result, status=status.HTTP_200_OK)
 
