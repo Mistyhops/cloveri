@@ -21,11 +21,7 @@ def get_tree(data: dict) -> dict:
     ).exclude(hidden=True).order_by('inner_order')
 
     if not instance:
-        test = {'detail': 'Does not exist object(s)'}
-        l = []
-        l.append(test)
-        raise NotFound(l)
-        # raise NotFound({'detail': 'Does not exist object(s)'})
+        raise NotFound({'detail': 'Does not exist object(s)'})
 
     result = NodeSerializer(instance, many=True).data
     return result
