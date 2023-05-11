@@ -472,7 +472,6 @@ def change_parent_node(data: dict, pk: int):
             descendant_list = Node.objects.filter(
                 path__startswith=movable_instance.path
             ) \
-                .exclude(path=movable_instance.path) \
                 .values_list('id', flat=True)
 
             if data['new_parent_id'] in descendant_list:
