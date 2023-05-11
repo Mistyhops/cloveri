@@ -1,5 +1,4 @@
 from django.db import transaction, DatabaseError, connection
-
 from django.db.models.functions import Length
 from rest_framework.exceptions import ValidationError, NotFound
 
@@ -18,7 +17,9 @@ def get_tree(data: dict) -> dict:
         project_id=data['project_id'],
         item_type=data['item_type'],
         item=data['item'],
-    ).exclude(hidden=True).order_by('inner_order')
+    )\
+        .exclude(hidden=True)\
+        .order_by('inner_order')
 
     if not instance:
         raise NotFound({'detail': 'Does not exist object(s)'})
@@ -84,7 +85,9 @@ def create_root_node(data: dict, path: str) -> object:
                 project_id=data['project_id'],
                 item_type=data['item_type'],
                 item=data['item'],
-            ).annotate(path_len=Length('path')).filter(path_len__lt=11).count()
+            )\
+                .annotate(path_len=Length('path'))\
+                .filter(path_len__lt=11).count()
 
             inner_order = '0' * (10 - len(str(amount_nodes + 1))) + str(amount_nodes + 1)
 
@@ -193,10 +196,13 @@ def change_inner_order_attr_node(data: dict, pk: int, internal_use: bool = False
                 item=data['item']
             ) \
                 .annotate(path_len=Length('path')) \
-                .exclude(path=parent_path) \
+                .exclude(path=parent_path)\
+                .exclude(hidden=True) \
                 .filter(path_len__lt=len(parent_path) + 11) \
                 .order_by('inner_order') \
-                .last().id
+                .last()\
+                .id
+
             data.update({
                 'destination_node_id': destination_node_id
             })
@@ -214,17 +220,22 @@ def change_inner_order_attr_node(data: dict, pk: int, internal_use: bool = False
                 project_id=data['project_id'],
                 item_type=data['item_type'],
                 item=data['item']
-            ).first()
+            )\
+                .exclude(hidden=True)\
+                .first()
 
             if not movable_instance:
                 raise NotFound(f'Object with id {pk} not found')
 
+            # получаем узел, на место которого двигаем
             destination_instance = Node.objects.select_for_update().filter(
                 id=data['destination_node_id'],
                 project_id=data['project_id'],
                 item_type=data['item_type'],
                 item=data['item']
-            ).first()
+            )\
+                .exclude(hidden=True)\
+                .first()
 
             if not destination_instance:
                 raise NotFound(f'Object with id {data.get("destination_node_id")} not found')
@@ -266,6 +277,7 @@ UPDATE tree_structure_node
         END
     WHERE path LIKE '{parent_path}%' 
         AND path != '{parent_path}'
+        AND (hidden IS NULL OR hidden = false)
         AND inner_order BETWEEN '{movable_instance.inner_order}' AND '{destination_instance.inner_order}'
         OR inner_order LIKE '{destination_instance.inner_order}%';
 
@@ -311,6 +323,7 @@ UPDATE tree_structure_node
         END
     WHERE path LIKE '{parent_path}%' 
         AND path != '{parent_path}'
+        AND (hidden IS NULL OR hidden = false)
         AND inner_order BETWEEN '{destination_instance.inner_order}' AND '{movable_instance.inner_order}'
         OR inner_order LIKE '{destination_instance.inner_order}%';
 
@@ -395,6 +408,10 @@ def change_hidden_attr_node(data: dict, pk: int):
 
     try:
         with transaction.atomic():
+            # перед удалением помещаем узел в конец
+            if hidden:
+                change_inner_order_attr_node(data, pk, internal_use=True)
+
             instance = Node.objects.select_for_update().filter(
                 id=pk,
                 project_id=data['project_id'],
@@ -410,6 +427,10 @@ def change_hidden_attr_node(data: dict, pk: int):
             else:
                 instance.hidden = hidden
                 instance.save()
+
+            # после восстановления помещаем узел в конец
+            if hidden is None:
+                change_inner_order_attr_node(data, pk, internal_use=True)
     except DatabaseError as e:
         raise ValidationError({'error': e})
 
@@ -440,7 +461,9 @@ def change_parent_node(data: dict, pk: int):
                 project_id=data['project_id'],
                 item_type=data['item_type'],
                 item=data['item']
-            ).first()
+            )\
+                .exclude(hidden=True)\
+                .first()
 
             if not movable_instance:
                 raise NotFound(f'Object with id {pk} not found')
@@ -460,7 +483,9 @@ def change_parent_node(data: dict, pk: int):
                 project_id=data['project_id'],
                 item_type=data['item_type'],
                 item=data['item']
-            ).first()
+            )\
+                .exclude(hidden=True)\
+                .first()
 
             if not new_parent:
                 raise NotFound(f'Object with id {data.get("new_parent_id")} not found')
@@ -472,12 +497,14 @@ def change_parent_node(data: dict, pk: int):
                 item=data['item']
             ) \
                 .annotate(path_len=Length('path')) \
-                .exclude(path=new_parent.path) \
+                .exclude(path=new_parent.path)\
+                .exclude(hidden=True) \
                 .filter(path_len__lt=(len(new_parent.path) + 11)) \
                 .count()
 
             new_inner_order = ('0' * (10 - len(str(new_siblings_quantity + 1))) + str(new_siblings_quantity + 1))
 
+            # до перемещения помещаем узел в конец, чтобы не ломать сортировку
             change_inner_order_attr_node(data, pk, internal_use=True)
 
             with connection.cursor() as cursor:
